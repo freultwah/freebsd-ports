@@ -1,0 +1,8 @@
+--- vendor/libnghttp2-sys-0.1.9+1.58.0/build.rs	2023-12-04 16:32:19.000000000 -0500
++++ vendor/libnghttp2-sys-0.1.9+1.58.0/build.rs	2023-12-12 15:18:42.431611000 -0500
+@@ -6,4 +6,5 @@
+ 
+ fn main() {
++    return;
+     let target = env::var("TARGET").unwrap();
+     let out_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap());

@@ -1,0 +1,85 @@
+--- carddav.php.orig	2025-07-20 18:12:11.341560000 +0000
++++ carddav.php	2025-07-20 18:12:39.465717000 +0000
+@@ -206,7 +206,11 @@
+     public function showMessage(string $msg, string $msgType = 'notice', bool $override = false, int $timeout = 0): void
+     {
+         $rcube = rcube::get_instance();
+-        $rcube->output->show_message($msg, $msgType, null, $override, $timeout);
++        $output = $rcube->output;
++
++        if ($output instanceof rcmail_output) {
++            $output->show_message($msg, $msgType, null, $override, $timeout);
++        }
+     }
+ 
+     public function clientCommand(string $method, ...$arguments): void
+--- src/Addressbook.php.orig	2025-07-20 18:08:19.698941000 +0000
++++ src/Addressbook.php	2025-07-20 18:11:31.209433000 +0000
+@@ -448,7 +448,7 @@
+      * @param ?string $sort_order Sort order
+      */
+     // phpcs:ignore PSR1.Methods.CamelCapsMethodName -- method name defined by rcube_addressbook class
+-    public function set_sort_order($sort_col, $sort_order = null): void
++    public function set_sort_order($sort_col = null, $sort_order = null): void
+     {
+         if (isset($sort_col) && key_exists($sort_col, $this->coltypes)) {
+             $this->sort_col = $sort_col;
+@@ -564,8 +564,8 @@
+     /**
+      * Mark one or more contact records as deleted
+      *
+-     * @param array $ids   Record identifiers
+-     * @param bool  $force Remove records irreversible (see self::undelete)
++     * @param array|string $ids   Record identifiers
++     * @param bool         $force Remove records irreversible (see self::undelete)
+      *
+      * @return int|false Number of removed records, False on failure
+      */
+@@ -575,6 +575,10 @@
+         $logger = $infra->logger();
+         $db = $infra->db();
+ 
++        if (is_string($ids)) {
++            $ids = explode(self::SEPARATOR, $ids);
++        }
++
+         /** @var list<string> $ids */
+         $deleted = 0;
+         $logger->info("delete([" . implode(",", $ids) . "])");
+@@ -691,7 +695,7 @@
+      * This filter mechanism is applied in addition to other filter mechanisms, see the description of the count()
+      * operation.
+      *
+-     * @param null|0|string $group_id Database identifier of the group. 0/"0"/null to reset the group filter.
++     * @param null|int|string $group_id Database identifier of the group. 0/"0"/null to reset the group filter.
+      */
+     // phpcs:ignore PSR1.Methods.CamelCapsMethodName -- method name defined by rcube_addressbook class
+     public function set_group($group_id): void
+@@ -703,6 +707,7 @@
+             $logger->debug("set_group($group_id)");
+ 
+             if ($group_id) {
++                $group_id = (string) $group_id;
+                 $db = $infra->db();
+                 // check for valid ID with the database - this throws an exception if the group cannot be found
+                 $db->lookup(["id" => $group_id, "abook_id" => $this->id], ["id"], "groups");
+@@ -996,7 +1001,7 @@
+             if (is_string($ids)) {
+                 $ids_string = $ids;
+                 /** @psalm-var list<string> $ids */
+-                $ids = explode(self::SEPARATOR, $ids_string);
++                $ids = explode(self::SEPARATOR, $ids);
+             }
+ 
+             $db->startTransaction();
+--- src/Config.php.orig	2025-07-20 18:11:39.303952000 +0000
++++ src/Config.php	2025-07-20 18:11:58.170094000 +0000
+@@ -84,7 +84,7 @@
+         $this->admPrefs = new AdminSettings(__DIR__ . '/../config.inc.php', $this->logger, $this->httpLogger);
+ 
+         $rcube = rcube::get_instance();
+-        $this->db = new Database($this->logger, $rcube->db);
++        $this->db = new Database($this->logger, $rcube->get_dbh());
+     }
+ 
+     public function db(): AbstractDatabase

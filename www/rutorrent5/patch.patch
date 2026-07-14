@@ -1,0 +1,65 @@
+diff --git a/js/content.js b/js/content.js
+index 7f734455..b19da962 100644
+--- a/js/content.js
++++ b/js/content.js
+@@ -851,6 +851,17 @@ function correctContent()
+                        "load"                  :       { name: "load.normal", prm: 1 }
+                });
+        }
++       if(theWebUI.systemInfo.rTorrent.iVersion>=0x1002)
++       {
++               $.extend(theRequestManager.aliases,
++               {
++                       "dht"                                                  :       { name: "dht.mode.set", prm: 1 },
++                       "throttle.max_uploads.div"              :       { name: "throttle.max_uploads.div._val", prm: 1 },
++                       "throttle.max_uploads.global"   :       { name: "throttle.max_uploads.global._val", prm: 1 },
++                       "throttle.max_downloads.div"    :       { name: "throttle.max_downloads.div._val", prm: 1 },
++                       "throttle.max_downloads.global" :       { name: "throttle.max_downloads.global._val", prm: 1 }
++        });
++    }
+        if(theWebUI.systemInfo.rTorrent.iVersion < 0x907) {
+                const title = theUILang.requiresAtLeastRtorrent.replace('{version}', 'v0.9.7');
+                $($$('webui.show_open_status')).attr({ disabled: '', title });
+diff --git a/php/methods-0.10.2.php b/php/methods-0.10.2.php
+new file mode 100644
+index 00000000..58cbbbdb
+--- /dev/null
++++ b/php/methods-0.10.2.php
+@@ -0,0 +1,9 @@
++<?php
++
++$this->aliases = array_merge($this->aliases,array(
++"dht"                                                 =>      array( "name"=>"dht.mode.set", "prm"=>1 ),
++"throttle.max_uploads.div"             =>      array( "name"=>"throttle.max_uploads.div._val", "prm"=>1 ),
++"throttle.max_uploads.global"  =>      array( "name"=>"throttle.max_uploads.global._val", "prm"=>1 ),
++"throttle.max_downloads.div"   =>      array( "name"=>"throttle.max_downloads.div._val", "prm"=>1 ),
++"throttle.max_downloads.global"        =>      array( "name"=>"throttle.max_downloads.global._val", "prm"=>1 ),
++));
+diff --git a/php/settings.php b/php/settings.php
+index c8ee7757..4ff8c9fb 100644
+--- a/php/settings.php
++++ b/php/settings.php
+@@ -220,6 +220,10 @@ class rTorrentSettings
+                        {
+                                require_once( 'methods-0.9.4.php' );
+                        }
++                       if($this->iVersion>=0x1002)
++                       {
++                               require_once( 'methods-0.10.2.php' );
++                       }
+                        
+                        $this->apiVersion = 0;
+                        if($this->iVersion>=0x901)
+@@ -230,7 +234,11 @@ class rTorrentSettings
+                                        $this->apiVersion = $req->val[0];
+                        }
+ 
+-                        $req = new rXMLRPCRequest( new rXMLRPCCommand("to_kb", floatval(1024)) );
++                       $req = new rXMLRPCRequest(new rXMLRPCCommand(
++                               "convert.kb",
++                               array('',floatval(1024))
++                       ));
++
+                        if($req->run())
+                        {
+                                if(!$req->fault)

@@ -1,0 +1,25 @@
+--- Makefile.extmod.orig	2026-05-04 06:48:08.611522000 +0000
++++ Makefile.extmod	2026-05-04 06:58:09.383034000 +0000
+@@ -79,8 +79,7 @@
+ HTTP_AUTH_KRB5_VARS=		DSO_EXTMODS+=auth_krb5
+ HTTP_AUTH_KRB5_EXTRA_PATCHES=	${PATCHDIR}/extra-patch-spnego-http-auth-nginx-module-config
+ 
+-HTTP_AUTH_LDAP_GH_TUPLE=	kvspb:nginx-auth-ldap:83c059b:http_auth_ldap
+-HTTP_AUTH_LDAP_EXTRA_PATCHES=	${PATCHDIR}/extra-patch-ngx_http_auth_ldap_module.c
++HTTP_AUTH_LDAP_GH_TUPLE=	freultwah:nginx-auth-ldap:9de312b:http_auth_ldap
+ HTTP_AUTH_LDAP_VARS=		DSO_EXTMODS+=http_auth_ldap
+ HTTP_AUTH_LDAP_USES=		ldap
+ 
+--- distinfo.orig	2026-05-04 06:48:08.611997000 +0000
++++ distinfo	2026-05-04 06:58:50.827973000 +0000
+@@ -41,8 +41,8 @@
+ SIZE (atomx-nginx-http-auth-digest-274490c_GH0.tar.gz) = 17815
+ SHA256 (stnoonan-spnego-http-auth-nginx-module-3575542_GH0.tar.gz) = 6d710f97bef58b2d5dc54445c0e48103786425f6d4ab18cf30a2168904d0ba62
+ SIZE (stnoonan-spnego-http-auth-nginx-module-3575542_GH0.tar.gz) = 24680
+-SHA256 (kvspb-nginx-auth-ldap-83c059b_GH0.tar.gz) = e76e9e117ad51af578a68fa7a30c256178796bb271fa77f01c93281a92b09921
+-SIZE (kvspb-nginx-auth-ldap-83c059b_GH0.tar.gz) = 18547
++SHA256 (freultwah-nginx-auth-ldap-9de312b_GH0.tar.gz) = 3c53bacbb3fb4f7f59cde514738dcbe890738268e20a91bd822211d812f8a28f
++SIZE (freultwah-nginx-auth-ldap-9de312b_GH0.tar.gz) = 18935
+ SHA256 (sto-ngx_http_auth_pam_module-v1.5.3_GH0.tar.gz) = 882018fea8d6955ab3fe294aafa8ebb1fdff4eac313c29583fef02c6de76fae7
+ SIZE (sto-ngx_http_auth_pam_module-v1.5.3_GH0.tar.gz) = 7084
+ SHA256 (arut-nginx-dav-ext-module-v3.0.0_GH0.tar.gz) = d2499d94d82d4e4eac8425d799e52883131ae86a956524040ff2fd230ef9f859

@@ -1,0 +1,105 @@
+--- bin/solr.orig	2025-11-01 22:54:09.000000000 +0000
++++ bin/solr	2025-11-14 19:30:45.319659000 +0000
+@@ -160,7 +160,7 @@
+ export SOLR_PORT
+ 
+ # test that Java exists, is executable and correct version
+-JAVA_VER=$("$JAVA" -version 2>&1)
++JAVA_VER="$("$JAVA" -version 2>&1)"
+ # shellcheck disable=SC2181
+ if [[ $? -ne 0 ]] ; then
+   echo >&2 "Java not found, or an error was encountered when running java."
+@@ -175,10 +175,13 @@
+   echo >&2 "${PATH}"
+   exit 1
+ else
+-  JAVA_VER_NUM=$(echo "$JAVA_VER" | grep -v '_OPTIONS' | head -1 | awk -F '"' '/version/ {print $2}' | sed -e's/^1\.//' | sed -e's/[._-].*$//')
+-  if (( JAVA_VER_NUM < JAVA_VER_REQ )) ; then
++  BARE_JAVA_VER="$(echo "${JAVA_VER}" | awk '/version/ {print $3}' | cut -d '"' -f 2)"
++  MAJOR_JAVA_VER=$(echo "${BARE_JAVA_VER}" | cut -d. -f1)
++  #MINOR_JAVA_VER=$(echo "${BARE_JAVA_VER}" | cut -d. -f2)
++  POINT_JAVA_VER=$(echo "${BARE_JAVA_VER}" | cut -d. -f3)
++  if [[ "$MAJOR_JAVA_VER" -lt "$JAVA_VER_REQ" ]] ; then
+     echo >&2 "Your current version of Java is too old to run this version of Solr."
+-    echo >&2 "We found major version $JAVA_VER_NUM, using command '${JAVA} -version', with response:"
++    echo >&2 "We found major version $MAJOR_JAVA_VER, using command '${JAVA} -version', with response:"
+     echo >&2 "${JAVA_VER}"
+     echo >&2
+     echo >&2 "Please install latest version of Java $JAVA_VER_REQ or set JAVA_HOME properly."
+@@ -1110,7 +1113,7 @@
+ 
+ # Establish default GC logging opts if no env var set (otherwise init to sensible default)
+ if [ -z "${GC_LOG_OPTS}" ]; then
+-  if [[ "$JAVA_VER_NUM" -lt "9" ]] ; then
++  if [[ "$MAJOR_JAVA_VER" -lt "9" ]] ; then
+     GC_LOG_OPTS=('-verbose:gc' '-XX:+PrintHeapAtGC' '-XX:+PrintGCDetails' \
+                  '-XX:+PrintGCDateStamps' '-XX:+PrintGCTimeStamps' '-XX:+PrintTenuringDistribution' \
+                  '-XX:+PrintGCApplicationStoppedTime')
+@@ -1125,7 +1128,7 @@
+ 
+ # if verbose gc logging enabled, setup the location of the log file and rotation
+ if [ "${#GC_LOG_OPTS[@]}" -gt 0 ]; then
+-  if [[ "$JAVA_VER_NUM" -lt "9" ]] || [ "$JAVA_VENDOR" == "OpenJ9" ]; then
++  if [[ "$MAJOR_JAVA_VER" -lt "9" ]] || [ "$JAVA_VENDOR" == "OpenJ9" ]; then
+     gc_log_flag="-Xloggc"
+     if [ "$JAVA_VENDOR" == "OpenJ9" ]; then
+       gc_log_flag="-Xverbosegclog"
+@@ -1398,18 +1401,25 @@
+   fi
+ 
+   # Workaround for JIT crash, see https://issues.apache.org/jira/browse/SOLR-16463
+-  if [[ "$JAVA_VER_NUM" -ge "17" ]] ; then
++  BUG_16463_WORKAROUND=""
++  if [[ "$MAJOR_JAVA_VER" -eq "17" ]] && [[ "${POINT_JAVA_VER}" -lt 7 ]]; then
++    BUG_16463_WORKAROUND="true"
++  fi
++  if [[ "$MAJOR_JAVA_VER" -eq "19" ]] && [[ "${POINT_JAVA_VER}" -lt 2 ]]; then
++    BUG_16463_WORKAROUND="true"
++  fi
++  if [[ -n "${BUG_16463_WORKAROUND}"  ]] ; then
+     SCRIPT_SOLR_OPTS+=("-XX:CompileCommand=exclude,com.github.benmanes.caffeine.cache.BoundedLocalCache::put")
+-    echo "Java $JAVA_VER_NUM detected. Enabled workaround for SOLR-16463"
++    echo "Java version ${JAVA_VER} with bug detected. Enabled workaround for SOLR-16463"
+   fi
+ 
+   # Vector optimizations are only supported for Java 20 and 21 for now.
+   # This will need to change as Lucene is upgraded and newer Java versions are released
+-  if [[ "$JAVA_VER_NUM" -ge "20" ]] && [[ "$JAVA_VER_NUM" -le "21" ]] ; then
++  if [[ "$MAJOR_JAVA_VER" -ge "20" ]] && [[ "$MAJOR_JAVA_VER" -le "21" ]] ; then
+     SCRIPT_SOLR_OPTS+=("--add-modules" "jdk.incubator.vector")
+     # Support native madvise for MemorySegmentIndexInputProvider
+     SCRIPT_SOLR_OPTS+=("--enable-native-access=ALL-UNNAMED")
+-    echo "Java $JAVA_VER_NUM detected. Incubating Panama Vector APIs have been enabled"
++    echo "Java $MAJOR_JAVA_VER detected. Incubating Panama Vector APIs have been enabled"
+   fi
+ 
+   # shellcheck disable=SC2164
+@@ -1471,13 +1481,12 @@
+     fi
+ 
+     # no lsof on cygwin though
+-    if lsof -v 2>&1 | grep -q revision; then
+       echo -n "Waiting up to $SOLR_START_WAIT seconds to see Solr running on port $SOLR_PORT"
+       # Launch in a subshell to show the spinner
+       (loops=0
+       while true
+       do
+-        running=$(lsof -t -PniTCP:$SOLR_PORT -sTCP:LISTEN || :)
++        running=$(sockstat -ls -P tcp -p $SOLR_PORT | grep LISTEN)
+         if [ -z "${running:-}" ]; then
+           slept=$((loops * 2))
+           if [ $slept -lt $SOLR_START_WAIT ]; then
+@@ -1495,13 +1504,6 @@
+         fi
+       done) &
+       spinner $!
+-    else
+-      echo -e "NOTE: Please install lsof as this script needs it to determine if Solr is listening on port $SOLR_PORT."
+-      sleep 10
+-      SOLR_PID=$(ps auxww | grep start\.jar | awk "/\-Djetty\.port=$SOLR_PORT/"' {print $2}' | sort -r)
+-      echo -e "\nStarted Solr server on port $SOLR_PORT (pid=$SOLR_PID). Happy searching!\n"
+-      return;
+-    fi
+   fi
+ }
+ 

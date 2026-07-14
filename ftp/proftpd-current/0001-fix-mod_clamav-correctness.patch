@@ -1,0 +1,259 @@
+--- vendor/github.com/jbenden/mod_clamav/mod_clamav.c.orig	2026-02-21 17:18:00.352550000 +0200
++++ vendor/github.com/jbenden/mod_clamav/mod_clamav.c	2026-02-21 17:23:33.427784000 +0200
+@@ -58,7 +58,29 @@
+ static int clamavd_connect_check(int sockd);
+ static int clamavd_scan(int sockd, const char *abs_filename, const char *rel_filename);
+ static int clamavd_connect(void);
++static int write_all(int fd, const void *buf, size_t len);
+ 
++static int write_all(int fd, const void *buf, size_t len) {
++  const unsigned char *ptr = (const unsigned char *) buf;
++  size_t off = 0;
++
++  while (off < len) {
++    ssize_t nwritten = write(fd, ptr + off, len - off);
++    if (nwritten < 0) {
++      if (errno == EINTR)
++        continue;
++      return -1;
++    }
++    if (nwritten == 0) {
++      errno = EPIPE;
++      return -1;
++    }
++    off += (size_t) nwritten;
++  }
++
++  return 0;
++}
++
+ /**
+  * Read the returned information from Clamavd.
+  */
+@@ -66,13 +88,23 @@
+   int infected = 0, waserror = 0, ret, fxerrno = 0;
+   char buff[4096], *pt, *pt1;
+   FILE *fd = 0;
++  int fddup = -1;
+ 
+   (void) pr_trace_msg("clamav", 1, "clamavd_result (sockd %d, abs_filename '%s', rel_filename '%s')", sockd, abs_filename, rel_filename);
+ 
+-  if ((fd=fdopen(dup(sockd), "r")) == NULL) {
++  fddup = dup(sockd);
++  if (fddup < 0) {
+     pr_log_pri(PR_LOG_ERR,
++               MOD_CLAMAV_VERSION ": error: Cant dup descriptor for reading: %d",
++               errno);
++    return -1;
++  }
++
++  if ((fd=fdopen(fddup, "r")) == NULL) {
++    pr_log_pri(PR_LOG_ERR,
+                MOD_CLAMAV_VERSION ": error: Cant open descriptor for reading: %d",
+                errno);
++    close(fddup);
+     return -1;
+   }
+ 
+@@ -104,7 +136,11 @@
+     }
+ 
+     /* clean up the response */
+-    pt += 2;
++    if (pt) {
++      pt += 2;
++    } else {
++      pt = buff;
++    }
+     pt1 = strstr(pt, " FOUND");
+     if (pt1) {
+       *pt1 = 0;
+@@ -156,6 +192,7 @@
+  */
+ static int clamavd_connect_check(int sockd) {
+   FILE *fd = NULL;
++  int fddup = -1;
+   char buff[32];
+ 
+   (void) pr_trace_msg("clamav", 6, "clamavd_connect_check (sockd %d)",
+@@ -164,7 +201,7 @@
+   if (sockd == -1)
+     return 0;
+ 
+-  if (write(sockd, "PING\n", 5) <= 0) {
++  if (write_all(sockd, "PING\n", 5) < 0) {
+     pr_log_debug(DEBUG4, MOD_CLAMAV_VERSION ": Clamd did not accept PING (%d): %s",
+                  errno, strerror(errno));
+     close(sockd);
+@@ -173,9 +210,20 @@
+     return 0;
+   }
+ 
+-  if ((fd = fdopen(dup(sockd), "r")) == NULL) {
++  fddup = dup(sockd);
++  if (fddup < 0) {
++    pr_log_debug(DEBUG4, MOD_CLAMAV_VERSION ": Clamd can not dup descriptor for reading (%d): %s",
++                 errno, strerror(errno));
++    close(sockd);
++    clamd_sockd = -1;
++    clam_errno = errno;
++    return 0;
++  }
++
++  if ((fd = fdopen(fddup, "r")) == NULL) {
+     pr_log_debug(DEBUG4, MOD_CLAMAV_VERSION ": Clamd can not open descriptor for reading (%d): %s",
+                  errno, strerror(errno));
++    close(fddup);
+     close(sockd);
+     clamd_sockd = -1;
+     clam_errno = errno;
+@@ -207,7 +255,7 @@
+   u_int32_t len = 0;
+   char *buf;
+   size_t bufsz = 4096;
+-  long res;
++  size_t res;
+   FILE *fd;
+ 
+   if (!clamavd_connect_check(sockd)) {
+@@ -223,7 +271,7 @@
+     clam_errno = 0;
+   }
+ 
+-  if (write(sockd, "nINSTREAM\n", 10) <= 0) {
++  if (write_all(sockd, "nINSTREAM\n", 10) < 0) {
+     pr_log_pri(PR_LOG_ERR,
+                MOD_CLAMAV_VERSION ": Cannot write to the Clamd socket: %d", errno);
+     clam_errno = errno;
+@@ -251,7 +299,7 @@
+   while ((res = fread(buf, 1, bufsz, fd)) > 0) {
+     len = htonl(res);
+     pr_log_debug(DEBUG4, MOD_CLAMAV_VERSION ": Streaming %" PR_LU " bytes (%d, %u) to Clamd.", res, len, sizeof(len));
+-    if (write(sockd, (void *) &len, sizeof(len)) <= 0) {
++    if (write_all(sockd, (void *) &len, sizeof(len)) < 0) {
+       pr_log_pri(PR_LOG_ERR,
+                  MOD_CLAMAV_VERSION ": Cannot write byte count to Clamd socket: %d", errno);
+       clam_errno = errno;
+@@ -259,7 +307,7 @@
+       free(buf);
+       return -1;
+     }
+-    if (write(sockd, buf, res) != res) {
++    if (write_all(sockd, buf, res) < 0) {
+       pr_log_pri(PR_LOG_ERR,
+                  MOD_CLAMAV_VERSION ": Cannot stream file to Clamd socket: %d", errno);
+       clam_errno = errno;
+@@ -269,18 +317,27 @@
+     }
+     if (feof(fd)) break;
+   }
++  if (ferror(fd)) {
++    pr_log_pri(PR_LOG_ERR,
++               MOD_CLAMAV_VERSION ": Cannot read file '%s' for streaming: %d",
++               rel_filename, errno);
++    clam_errno = errno;
++    fclose(fd);
++    free(buf);
++    return -1;
++  }
+   fclose(fd);
+   free(buf);
+ 
+   /* send null length byte, to terminate stream */
+   len = 0;
+-  if (write(sockd, (void *) &len, sizeof(len)) <= 0) {
++  if (write_all(sockd, (void *) &len, sizeof(len)) < 0) {
+     pr_log_pri(PR_LOG_ERR,
+                MOD_CLAMAV_VERSION ": Cannot write termination byte to Clamd socket: %d", errno);
+     clam_errno = errno;
+     return -1;
+   }
+-  if (write(sockd, "\n", 1) <= 0) {
++  if (write_all(sockd, "\n", 1) < 0) {
+     pr_log_pri(PR_LOG_ERR,
+                MOD_CLAMAV_VERSION ": Cannot write terminating return. %d", errno);
+   }
+@@ -324,7 +381,7 @@
+     clam_errno = 0;
+   }
+ 
+-  if (write(sockd, scancmd, strlen(scancmd)) <= 0) {
++  if (write_all(sockd, scancmd, strlen(scancmd)) < 0) {
+     pr_log_pri(PR_LOG_ERR,
+                MOD_CLAMAV_VERSION ": error: Cannot write to the Clamd socket: %d", errno);
+     free(scancmd);
+@@ -364,7 +421,7 @@
+       return -1;
+     }
+     is_remote = 1;
+-    if ((port = (int *) get_param_ptr(CURRENT_CONF, "ClamPort", TRUE)) <= 0)
++    if ((port = (int *) get_param_ptr(CURRENT_CONF, "ClamPort", TRUE)) == NULL)
+       clamd_port = 3310;
+     else
+       clamd_port = *port;
+@@ -379,7 +436,8 @@
+   if (is_remote == 0) {
+     /* Local Socket */
+     server.sun_family = AF_UNIX;
+-    strncpy(server.sun_path, clamd_host, sizeof(server.sun_path));
++    strncpy(server.sun_path, clamd_host, sizeof(server.sun_path) - 1);
++    server.sun_path[sizeof(server.sun_path) - 1] = '\0';
+ 
+     if ((sockd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+       PRIVS_RELINQUISH;
+@@ -471,6 +529,7 @@
+     pr_trace_msg(trace_channel, 9, "fsync(2) error on fd %d (path '%s'): %s",
+                  fd, fh->fh_path, strerror(xerrno));
+ 
++    close(fd);
+     errno = xerrno;
+     return -1;
+   }
+@@ -482,6 +541,7 @@
+     pr_trace_msg(trace_channel, 9, "pr_fsio_fstat() error on fd %d (path '%s'): %s",
+                  fd, fh->fh_path, strerror(xerrno));
+ 
++    close(fd);
+     errno = xerrno;
+     return -1;
+   }
+@@ -510,9 +570,12 @@
+    * Figure out the absolute path of our directory.
+    */
+   char buf[PR_TUNABLE_PATH_MAX + 1];
+-  getcwd(buf, PR_TUNABLE_PATH_MAX);
++  if (getcwd(buf, PR_TUNABLE_PATH_MAX) == NULL) {
++    pr_trace_msg(trace_channel, 9, "getcwd() error: %s", strerror(errno));
++    buf[0] = '\0';
++  }
+   abs_path = fh->fh_path;
+-  if (abs_path) {
++  if (abs_path && buf[0] != '\0') {
+     (void) pr_trace_msg("clamav", 8, "vwd=%s fh_path=%s chroot=%s cwd=%s buf=%s",
+                         pr_fs_getvwd(), abs_path, session.chroot_path, pr_fs_getcwd(),
+                         buf);
+@@ -639,6 +702,7 @@
+   /* knowing the factor, now convert the given number string to a real
+    * number
+    */
++  errno = 0;
+   res = strtol(nbytes_str, &endp, 10);
+ 
+   if (errno == ERANGE) {
+@@ -646,6 +710,11 @@
+     return 0;
+   }
+ 
++  if (res < 0) {
++    clam_errno = EINVAL;
++    return 0;
++  }
++
+   if (endp && *endp) {
+     clam_errno = EINVAL;
+     return 0;
+@@ -888,4 +957,3 @@
+   clamav_sess_init,  /* session initialization */
+   MOD_CLAMAV_VERSION /* module version */
+ };
+-

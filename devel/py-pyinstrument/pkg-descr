@@ -1,0 +1,2 @@
+Pyinstrument is a statistical Python profiler that records the call
+stack periodically and reports where a program spends its time.

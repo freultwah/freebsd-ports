@@ -1,0 +1,305 @@
+diff --git a/app/Classes/Template.php b/app/Classes/Template.php
+index a2971e9..8049414 100644
+--- app/Classes/Template.php
++++ app/Classes/Template.php
+@@ -123,6 +123,11 @@ class Template
+ 		return $this->template->has($key);
+ 	}
+ 
++	public function get(string $key,mixed $default = NULL): mixed
++	{
++		return $this->template->get($key,$default);
++	}
++
+ 	/**
+ 	 * Return the configuration for an attribute
+ 	 *
+@@ -729,4 +734,4 @@ class Template
+ 
+ 		return $result;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/app/Http/Controllers/EntryController.php b/app/Http/Controllers/EntryController.php
+index 818a996..acb2064 100644
+--- app/Http/Controllers/EntryController.php
++++ app/Http/Controllers/EntryController.php
+@@ -17,6 +17,7 @@ use LdapRecord\Query\ObjectNotFoundException;
+ use Nette\NotImplementedException;
+ 
+ use App\Classes\LDAP\Attribute\Factory;
++use App\Classes\Template;
+ use App\Classes\LDAP\Import\LDIF as LDIFImport;
+ use App\Classes\LDAP\Export\LDIF as LDIFExport;
+ use App\Exceptions\Import\{GeneralException,VersionException};
+@@ -28,7 +29,7 @@ class EntryController extends Controller
+ {
+ 	private const LOGKEY = 'CEc';
+ 
+-	public const INTERNAL_POST = ['_auto_value','_key','_rdn','_rdn_new','_rdn_value','_step','_template','_token','template'];
++	public const INTERNAL_POST = ['_auto_value','_key','_rdn','_rdn_new','_rdn_value','_step','_template','_template_groups','_token','template'];
+ 
+ 	/**
+ 	 * Create a new object in the LDAP server
+@@ -45,6 +46,7 @@ class EntryController extends Controller
+ 		$key = request_key($request->get('_key',old('_key')));
+ 
+ 		$template = NULL;
++		$template_groups = collect();
+ 		$o = new Entry;
+ 		$o->setRDNBase($key['dn']);
+ 
+@@ -80,6 +82,19 @@ class EntryController extends Controller
+ 			}
+ 		}
+ 
++		if ($template && ($groups_base_dn=$template->get('post_create_group_base_dn'))) {
++			try {
++				$template_groups = config('server')
++					->subordinates($groups_base_dn,['dn'],FALSE)
++					->map(fn($item)=>['id'=>$item->getDN(),'value'=>$item->getRDN()])
++					->sortBy('value')
++					->values();
++
++			} catch (ObjectNotFoundException $e) {
++				Log::warning(sprintf('%s:Template group base [%s] not found',self::LOGKEY,$groups_base_dn));
++			}
++		}
++
+ 		// See if we need to add in force_managed attributes
+ 		foreach (config('pla.force_managed') as $attr => $ocs) {
+ 			if ($template->objectclasses->intersect($ocs)->count()) {
+@@ -96,6 +111,7 @@ class EntryController extends Controller
+ 			->with('o',$o)
+ 			->with('step',$step)
+ 			->with('template',$template)
++			->with('template_groups',$template_groups)
+ 			->with('container',old('container',$key['dn']));
+ 	}
+ 
+@@ -215,12 +231,14 @@ class EntryController extends Controller
+ 
+ 		$o = new Entry;
+ 		$o->setDn($dn);
++		$group_failures = collect();
+ 
+ 		foreach ($request->except(self::INTERNAL_POST) as $key => $value)
+ 			$o->{$key} = array_filter($value);
+ 
+ 		try {
+ 			$o->save();
++			$group_failures = $this->post_create_template_processing($request,$o);
+ 
+ 		} catch (InsufficientAccessException $e) {
+ 			$request->flash();
+@@ -253,8 +271,70 @@ class EntryController extends Controller
+ 			Cache::delete($attr.':'.Session::id());
+ 		}
+ 
+-		return Redirect::to('/')
++		$redirect = Redirect::to('/')
+ 			->withFragment($o->getDNSecure());
++
++		if ($group_failures->count()) {
++			$redirect->with('note',sprintf('%s: %s',
++				__('User created, but group assignment failed'),
++				$group_failures->join(', ')
++			));
++		}
++
++		return $redirect;
++	}
++
++	private function post_create_template_processing(EntryAddRequest $request,Entry $entry): Collection
++	{
++		$template_file = $request->post('_template');
++		$failed = collect();
++
++		if (! $template_file)
++			return $failed;
++
++		$template = new Template($template_file);
++
++		if ($template->invalid) {
++			Log::warning(sprintf('%s:Skipping post-create template processing, template [%s] is invalid [%s]',self::LOGKEY,$template_file,$template->reason));
++			return $failed;
++		}
++
++		$groups = collect($request->post('_template_groups',[]))
++			->filter(fn($item)=>is_string($item) && strlen($item))
++			->unique();
++
++		if (! $groups->count())
++			return $failed;
++
++		foreach ($groups as $group_dn) {
++			try {
++				$group = config('server')->fetch($group_dn);
++
++				if (! $group) {
++					Log::warning(sprintf('%s:Skipping group add, group DN doesnt exist [%s]',self::LOGKEY,$group_dn));
++					continue;
++				}
++
++				$members = ($group->getObject('member')?->values->dot()
++					->filter(fn($item)=>is_string($item) && strlen($item))
++					->values()
++					?: collect())
++					->filter(fn($item)=>strlen($item))
++					->push($entry->getDN())
++					->unique()
++					->values()
++					->toArray();
++
++				$group->member = [Entry::TAG_NOTAG=>$members];
++				$group->save();
++
++			} catch (\Throwable $e) {
++				$failed->push($group_dn);
++				Log::warning(sprintf('%s:Unable to add [%s] to group [%s]: %s',self::LOGKEY,$entry->getDN(),$group_dn,$e->getMessage()));
++			}
++		}
++
++		return $failed;
+ 	}
+ 
+ 	public function delete(Request $request): \Illuminate\Http\RedirectResponse
+@@ -538,4 +618,4 @@ class EntryController extends Controller
+ 			abort(500,$e->getMessage());
+ 		}
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/app/Http/Requests/EntryAddRequest.php b/app/Http/Requests/EntryAddRequest.php
+index d5d13e5..7396aff 100644
+--- app/Http/Requests/EntryAddRequest.php
++++ app/Http/Requests/EntryAddRequest.php
+@@ -100,8 +100,8 @@ class EntryAddRequest extends FormRequest
+ 					'min:1',
+ 					new HasStructuralObjectClass,
+ 				],
+-				'template' => [
+-					function (string $attribute,mixed $value,\Closure $fail) {
++					'template' => [
++						function (string $attribute,mixed $value,\Closure $fail) {
+ 						$oc = collect(request()->post('objectclass'))->dot()->filter();
+ 
+ 						// If this is step 1 and there is no objectclass, and no template, then fail
+@@ -115,10 +115,12 @@ class EntryAddRequest extends FormRequest
+ 						// Cant have both an objectclass and a template
+ 						if ($oc->count() && strlen($value))
+ 							$fail(__('You cannot select a template and an objectclass'));
+-					},
+-				],
+-				'_auto_value' => 'nullable|array|min:1',
+-				'_auto_value.*' => [
++						},
++					],
++					'_template_groups' => 'nullable|array',
++					'_template_groups.*' => 'nullable|string|min:1',
++					'_auto_value' => 'nullable|array|min:1',
++					'_auto_value.*' => [
+ 					'nullable',
+ 					function (string $attribute,mixed $value,\Closure $fail) {
+ 						$attr = preg_replace('/^_auto_value\./','',$attribute);
+@@ -137,4 +139,4 @@ class EntryAddRequest extends FormRequest
+ 			])
+ 			->toArray();
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/resources/views/frames/create.blade.php b/resources/views/frames/create.blade.php
+index 5de7a77..5008ed4 100644
+--- resources/views/frames/create.blade.php
++++ resources/views/frames/create.blade.php
+@@ -64,16 +64,32 @@
+ 								</div>
+ 								@break
+ 
+-							@case(2)
+-								<input type="hidden" name="_template" value="{{ $template?->file }}">
+-								<x-attribute :o="$o->rdn" :edit="true" :template="$template"/>
+-
+-								@foreach($o->getVisibleAttributes() as $ao)
+-									<x-attribute :o="$ao" :edit="true" :template="$template"/>
+-								@endforeach
++								@case(2)
++									<input type="hidden" name="_template" value="{{ $template?->file }}">
++									<x-attribute :o="$o->rdn" :edit="true" :template="$template"/>
++
++									@foreach($o->getVisibleAttributes() as $ao)
++										<x-attribute :o="$ao" :edit="true" :template="$template"/>
++									@endforeach
++
++									@if($template && $template_groups->count())
++										<div class="row mb-2">
++											<div class="col-12">
++												<label class="form-label" for="_template_groups">@lang('Add user to group(s)')</label>
++												<select id="_template_groups" name="_template_groups[]" class="form-select @error('_template_groups') is-invalid @enderror" multiple>
++													@foreach($template_groups as $group)
++														<option value="{{ $group['id'] }}" @selected(collect(old('_template_groups',[]))->contains($group['id']))>{{ $group['value'] }}</option>
++													@endforeach
++												</select>
++												@error('_template_groups')
++													<span class="invalid-feedback d-block">{{ $message }}</span>
++												@enderror
++											</div>
++										</div>
++									@endif
+ 
+-								@if(! $template)
+-									<!-- @todo When we come back from validation the javascript to append a new attribute is not loaded -->
++									@if(! $template)
++										<!-- @todo When we come back from validation the javascript to append a new attribute is not loaded -->
+ 									@include('fragment.dn.add_attr',['edit'=>TRUE])
+ 								@endif
+ 								@break;
+@@ -101,8 +117,8 @@
+ 		<!-- create -->
+ 		var dn = '{{ Crypt::encryptString($container) }}';
+ 
+-		@if($step === 1)
+-			$(document).ready(function() {
++			@if($step === 1)
++				$(document).ready(function() {
+ 				$('#objectclass').on('select2:open',function(){
+ 					$('#template').val(null).trigger('change');
+ 				});
+@@ -110,15 +126,28 @@
+ 				$('#template').on('select2:open',function(){
+ 					$('#objectclass').val(null).trigger('change');
+ 				})
+-			});
+-		@endif
++				});
++			@endif
++
++			@if(($step === 2) && ($template ?? NULL) && ($template_groups ?? collect())->count())
++				$(document).ready(function() {
++					$('#_template_groups').select2({
++						theme: 'bootstrap-5',
++						dropdownAutoWidth: false,
++						width: 'style',
++						allowClear: true,
++						placeholder: '@lang('Select group(s)')',
++						multiple: true,
++					});
++				});
++			@endif
+ 
+-		// Render the options list, if there are options
+-		@if((! $template) && $o->getMissingAttributes()->count())
++			// Render the options list, if there are options
++			@if((! $template) && $o->getMissingAttributes()->count())
+ 			$('#newattr-select.d-none')
+ 				.removeClass('d-none')
+ 				.find('select')
+ 				.attr('disabled',false);
+ 		@endif
+ 	</script>
+-@append
+\ No newline at end of file
++@append

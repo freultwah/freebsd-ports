@@ -1,0 +1,30 @@
+--- vendor/github.com/jbenden/mod_clamav/mod_clamav.c.orig
++++ vendor/github.com/jbenden/mod_clamav/mod_clamav.c
+@@ -298,7 +298,8 @@
+   /* send file contents using protocol defined by Clamd */
+   while ((res = fread(buf, 1, bufsz, fd)) > 0) {
+     len = htonl(res);
+-    pr_log_debug(DEBUG4, MOD_CLAMAV_VERSION ": Streaming %" PR_LU " bytes (%d, %u) to Clamd.", res, len, sizeof(len));
++    pr_log_debug(DEBUG4, MOD_CLAMAV_VERSION ": Streaming %zu bytes (%u, %zu) to Clamd.",
++                 res, (unsigned int) len, sizeof(len));
+     if (write_all(sockd, (void *) &len, sizeof(len)) < 0) {
+       pr_log_pri(PR_LOG_ERR,
+                  MOD_CLAMAV_VERSION ": Cannot write byte count to Clamd socket: %d", errno);
+@@ -669,7 +670,7 @@
+   long res;
+   unsigned long nbytes;
+   char *endp = NULL;
+-  float units_factor = 0.0;
++  double units_factor = 0.0;
+ 
+   /* clear any previous local errors */
+   clam_errno = 0;
+@@ -723,7 +724,7 @@
+   /* don't bother to apply the factor if that will cause the number to
+    * overflow
+    */
+-  if (res > (ULONG_MAX / units_factor)) {
++  if ((double) res > ((double) ULONG_MAX / units_factor)) {
+     clam_errno = ERANGE;
+     return 0;
+   }

@@ -1,0 +1,41 @@
+diff --git a/htdocs/feed.php b/htdocs/feed.php
+index ac9014b2..c74faa3b 100644
+--- htdocs/feed.php
++++ htdocs/feed.php
+@@ -32,6 +32,17 @@ function hyperlink( $text ) {
+   return preg_replace( '@(https?://([-\w\.]+[-\w])+(:\d+)?(/([\w/_\.#-]*(\?\S+)?[^\.\s])?)?)@', '<a href="$1" target="_blank">$1</a>', htmlspecialchars($text) );
+ }
+ 
++function feed_datetime_format( DateTimeInterface $dt, $format ) {
++  switch ( $format ) {
++    case '%T':
++      return $dt->format('H:i:s');
++    case '%F %T':
++      return $dt->format('Y-m-d H:i:s');
++    default:
++      return $dt->format(DateTimeInterface::ATOM);
++  }
++}
++
+ function caldav_get_feed( $request, $collection ) {
+   global $c, $session;
+ 
+@@ -134,15 +145,15 @@ function caldav_get_feed( $request, $collection ) {
+ 
+     $dt_start = new RepeatRuleDateTime($event->dtstart);
+     if  ( $dt_start != null ) {
+-      $p_time = '<strong>' . translate('Time') . ':</strong> ' . strftime(translate('%F %T'), $dt_start->epoch());
++      $p_time = '<strong>' . translate('Time') . ':</strong> ' . feed_datetime_format($dt_start, translate('%F %T'));
+ 
+       $dt_end = new RepeatRuleDateTime($event->dtend);
+       if  ( $dt_end != null ) {
+         $p_time .= ' - ' . ( $dt_end->AsDate() == $dt_start->AsDate()
+                                  # Translators: his is the formatting of just the time. See http://php.net/manual/en/function.strftime.php
+-                                 ? strftime(translate('%T'), $dt_end->epoch())
++                                 ? feed_datetime_format($dt_end, translate('%T'))
+                                  # Translators: this is the formatting of a date with time. See http://php.net/manual/en/function.strftime.php
+-                                 : strftime(translate('%F %T'), $dt_end->epoch())
++                                 : feed_datetime_format($dt_end, translate('%F %T'))
+                             );
+       }
+       $content .= $p_time;

@@ -1,0 +1,4 @@
+bin/xapsd
+@dir /var/db/xapsd
+@dir(,dovecot,) /var/run/xapsd
+@sample(root,xapsd,640) etc/xapsd/xapsd.yaml.sample

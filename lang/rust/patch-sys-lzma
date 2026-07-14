@@ -1,0 +1,15 @@
+Whether to use the already installd lzma is determined based
+on pkg-config. On FreeBSD that detection fails, because lzma
+is part of the base OS. Use system -llzma unconditionally...
+
+	-mi
+
+--- vendor/lzma-sys/build.rs	2023-12-04 16:32:19.000000000 -0500
++++ vendor/lzma-sys/build.rs	2023-12-11 18:09:40.320258000 -0500
+@@ -19,5 +19,5 @@
+     // Otherwise check the system to see if it has an lzma library already
+     // installed that we can use.
+-    if !want_static && !msvc && pkg_config::probe_library("liblzma").is_ok() {
++    if !want_static && !msvc {
+         return;
+     }

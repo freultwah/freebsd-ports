@@ -1,0 +1,751 @@
+--- contrib/Makefile.in.orig	2026-05-09 20:43:55.000000000 +0000
++++ contrib/Makefile.in	2026-05-11 08:54:44.022939000 +0000
+@@ -18,5 +18,5 @@
+ 
+ install-utils:
+ 	$(INSTALL) -o $(INSTALL_USER) -g $(INSTALL_GROUP) -m 0755 $(srcdir)/ftpasswd $(DESTDIR)$(bindir)/ftpasswd
+-	$(INSTALL) -o $(INSTALL_USER) -g $(INSTALL_GROUP) -m 0755 $(srcdir)/ftpmail $(DESTDIR)$(bindir)/ftpmail
++	$(INSTALL) -o $(INSTALL_USER) -g $(INSTALL_GROUP) -m 0755 $(srcdir)/ftpmail.py $(DESTDIR)$(bindir)/ftpmail.py
+ 	$(INSTALL) -o $(INSTALL_USER) -g $(INSTALL_GROUP) -m 0755 $(srcdir)/ftpquota $(DESTDIR)$(bindir)/ftpquota
+--- /dev/null	2026-05-11 11:52:10.354387000 +0300
++++ contrib/ftpmail.conf.sample	2026-05-11 11:36:13.067503000 +0300
+@@ -0,0 +1,24 @@
++[DEFAULT]
++from_name = FTP Server
++from_addr = ftp@example.com
++recipient = ops@example.com
++# upload_recipient = upload-admin@example.com
++# download_recipient = download-admin@example.com
++# bcc_recipient = audit@example.com
++smtp_server = mail.example.com
++smtp_port = 587
++smtp_timeout = 5
++smtp_starttls = true
++subject = New files on server!
++attach_file = false
++log = /var/log/ftpmail.log
++xferlog = /var/log/proftpd/xferlog
++log_level = info
++log_format = sparse
++fifo = /var/log/proftpd/xferlog.fifo
++sleep = 0.5
++daemonize = false
++# auth = /usr/local/etc/ftpmail_smtp_auth.conf
++pid = /var/run/ftpmail.pid
++ignore_users = user1|user2|user3|user4|user5
++watch_users =
+--- /dev/null	2026-06-03 09:53:57.404076000 +0000
++++ contrib/ftpmail.py	2026-06-03 09:52:32.164916000 +0000
+@@ -0,0 +1,712 @@
++#!/usr/bin/env python3
++from __future__ import annotations
++import argparse
++import os
++import sys
++import re
++import time
++import select
++import logging
++import smtplib
++import signal
++from email.message import EmailMessage
++from email.utils import formataddr
++from urllib.parse import unquote
++import configparser
++import mimetypes
++
++
++import dataclasses
++from datetime import datetime
++
++# ---------------------------------------------------------------------------
++# ProFTPd TransferLog parser (per xferlog(8))
++#   time  duration  client  server  size  path  type  action  direction  mode  user  completion
++# Only `path` may contain spaces, so we parse fixed tokens from both ends
++# and treat the remainder as the file path.
++# ---------------------------------------------------------------------------
++
++@dataclasses.dataclass
++class TransferRecord:
++    timestamp: datetime
++    duration_secs: float
++    client: str
++    server: str
++    size_bytes: int
++    path: str
++    xfer_type: str
++    action_flag: str
++    direction: str
++    access_mode: str
++    user: str
++    completion: str
++
++
++def _parse_timestamp(tokens):
++    """Parse leading timestamp tokens, return (datetime, tokens_consumed)."""
++    import re as _re
++    _ts_re = _re.compile(
++        r"^(?P<mon>\w+)\s+(?P<day>\d{1,2})\s+"
++        r"(?P<hour>\d{2}):(?P<min>\d{2}):(?P<sec>\d{2})(?:\.\d+)?"
++        r"\s+(?P<year>\d{4})"
++    )
++    _months = {
++        "jan": 1, "feb": 2, "mar": 3, "apr": 4,
++        "may": 5, "jun": 6, "jul": 7, "aug": 8,
++        "sep": 9, "oct": 10, "nov": 11, "dec": 12,
++    }
++    if len(tokens) >= 5:
++        m = _ts_re.match(f"{tokens[1]} {tokens[2]} {tokens[3]} {tokens[4]}")
++        if m:
++            d = m.groupdict()
++            return (datetime(int(d["year"]), _months.get(d["mon"].lower(), 1),
++                           int(d["day"]), int(d["hour"]), int(d["min"]), int(d["sec"])), 5)
++    if len(tokens) >= 4:
++        m = _ts_re.match(f"{tokens[0]} {tokens[1]} {tokens[2]} {tokens[3]}")
++        if m:
++            d = m.groupdict()
++            return (datetime(int(d["year"]), _months.get(d["mon"].lower(), 1),
++                           int(d["day"]), int(d["hour"]), int(d["min"]), int(d["sec"])), 4)
++    raise ValueError(f"Cannot parse timestamp from: {tokens[:6]}")
++
++
++def parse_xferlog_line(line):
++    """Parse a ProFTPd TransferLog line. Returns TransferRecord or None.
++
++    Format (no server field, with optional extras before completion):
++        time  duration  client  size  path  type  action  direction  mode  user  [extras...]  completion
++    Only `path` may contain spaces.  We locate `direction` (always 'i' or 'o')
++    scanning backwards from the end, then derive the surrounding fields from
++    that anchor point.
++    """
++    line = line.strip()
++    if not line:
++        return None
++    parts = line.split()
++    if len(parts) < 11:
++        return None
++    try:
++        ts, consumed = _parse_timestamp(parts)
++    except (ValueError, IndexError):
++        return None
++    remaining = parts[consumed:]
++    # duration, client, size
++    if len(remaining) < 3:
++        return None
++    try:
++        duration_secs = float(remaining[0])
++    except ValueError:
++        return None
++    client = remaining[1]
++    try:
++        size_bytes = int(remaining[2])
++    except ValueError:
++        return None
++    rest = remaining[3:]  # path ... type action direction mode user [extras...] completion
++    if len(rest) < 7:
++        return None
++    completion = rest[-1]
++    # Scan backwards from the end for direction ('i' or 'o').
++    # This anchors us between the fixed fields and the variable extras.
++    dir_idx = None
++    for i in range(len(rest) - 2, 2, -1):
++        if rest[i] in ('i', 'o', 'd'):
++            dir_idx = i
++            break
++    if dir_idx is None:
++        return None
++    xfer_type = rest[dir_idx - 2]
++    action_flag = rest[dir_idx - 1]
++    direction = rest[dir_idx]
++    access_mode = rest[dir_idx + 1]
++    user = rest[dir_idx + 2]
++    path = " ".join(rest[:dir_idx - 2]) if dir_idx > 2 else "/"
++    # Server is not logged in this format; set to empty string for compatibility.
++    server = ""
++    return TransferRecord(
++        timestamp=ts, duration_secs=duration_secs, client=client,
++        server=server, size_bytes=size_bytes, path=path,
++        xfer_type=xfer_type, action_flag=action_flag, direction=direction,
++        access_mode=access_mode, user=user, completion=completion,
++    )
++
++TRUE_VALUES = {'true', '1', 'yes', 'on'}
++LIST_CONFIG_KEYS = {'recipient', 'upload_recipient', 'download_recipient', 'bcc_recipient'}
++BOOL_CONFIG_KEYS = {'attach_file', 'smtp_starttls'}
++LOG_LEVELS = {'debug', 'info'}
++LOG_FORMATS = {'full', 'sparse'}
++
++def parse_arguments(config):
++    parser = argparse.ArgumentParser(
++        description="Monitor ProFTPd uploads and send email notifications."
++    )
++    parser.add_argument('--config', type=str, help='Path to configuration file.')
++    parser.add_argument('--from-name', type=str, help='Name to display in the From header.')
++    parser.add_argument('--attach-file', action='store_true', default=None, help='Attach uploaded files to notification emails.')
++    parser.add_argument('--fifo', type=str, help='Path to the FIFO for TransferLog. Default: /var/log/proftpd/xferlog.fifo')
++    parser.add_argument('--from', dest='from_addr', type=str, help='Email address for the From header.')
++    parser.add_argument('--ignore-users', type=str, help='Regex to ignore certain users.')
++    parser.add_argument('--xferlog', type=str, help='Path to write raw TransferLog lines read from FIFO. Default: /var/log/proftpd/xferlog')
++    parser.add_argument('--log', type=str, help='Path to log file for ftpmail script output. Default: /var/log/ftpmail.log')
++    parser.add_argument('--log-level', choices=sorted(LOG_LEVELS), help='Logging level.')
++    parser.add_argument('--log-format', choices=sorted(LOG_FORMATS), help='Logging format.')
++    parser.add_argument('--recipient', action='append', help='Email address to receive notifications. Can be used multiple times.')
++    parser.add_argument('--upload-recipient', action='append', help='Email address to receive upload notifications. Overrides --recipient.')
++    parser.add_argument('--download-recipient', action='append', help='Email address to receive download notifications. Can be used multiple times.')
++    parser.add_argument('--bcc-recipient', action='append', help='Email address to BCC. Can be used multiple times.')
++    parser.add_argument('--sleep', type=float, help='Sleep duration in seconds when no input is present.')
++    parser.add_argument('--smtp-server', type=str, help='SMTP server address.')
++    parser.add_argument('--smtp-port', type=int, help='SMTP server port. Default: 25.')
++    parser.add_argument('--smtp-timeout', type=float, help='SMTP connection timeout in seconds. Default: 5.')
++    parser.add_argument('--smtp-starttls', action='store_true', default=None, help='Use STARTTLS for SMTP.')
++    parser.add_argument('--subject', type=str, help='Custom email subject.')
++    parser.add_argument('--watch-users', type=str, help='Regex to watch specific users.')
++    parser.add_argument('--auth', type=str, help='Path to SMTP authentication info file.')
++    parser.add_argument('--pid', type=str, help='Path to PID file.')
++    
++    args = parser.parse_args()
++
++    # Override config with command-line arguments if provided
++    for key, value in vars(args).items():
++        if value is not None:
++            config[key] = value
++
++    # Apply defaults only if not set by config or CLI
++    config.setdefault('fifo', '/var/log/proftpd/xferlog.fifo')
++    config.setdefault('xferlog', '/var/log/proftpd/xferlog')
++    config.setdefault('log', '/var/log/ftpmail.log')
++    config.setdefault('smtp_timeout', 5.0)
++
++    validate_config(config, parser)
++
++    return config
++
++def parse_config_path():
++    parser = argparse.ArgumentParser(add_help=False)
++    parser.add_argument('--config', type=str)
++    args, _ = parser.parse_known_args()
++    return args.config
++
++def default_config_path():
++    script_path = os.path.realpath(sys.argv[0])
++    script_dir, script_filename = os.path.split(script_path)
++    script_basename, _ = os.path.splitext(script_filename)
++    config_filename = f"{script_basename}.conf"
++    local_config_path = os.path.join(script_dir, config_filename)
++    if os.path.exists(local_config_path):
++        return local_config_path
++    return os.path.join("/usr/local/etc", config_filename)
++
++def parse_bool(value):
++    if isinstance(value, bool):
++        return value
++    return str(value).strip().lower() in TRUE_VALUES
++
++def load_config_file(config_file_path):
++    config = {}
++    if os.path.exists(config_file_path):
++        parser_ini = configparser.ConfigParser()
++        try:
++            with open(config_file_path, 'r') as f:
++                file_content = f.read()
++            # Prepend a dummy section header to enable parsing without actual sections
++            file_content = "[DEFAULT]\n" + file_content
++            parser_ini.read_string(file_content)
++            defaults = parser_ini['DEFAULT']
++            for key in defaults:
++                value = defaults[key].strip()
++                # Remove surrounding quotes if present
++                if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
++                    value = value[1:-1]
++                # Handle list-type arguments
++                if key in LIST_CONFIG_KEYS:
++                    config[key] = [item.strip() for item in value.split(',') if item.strip()]
++                else:
++                    if key in BOOL_CONFIG_KEYS:
++                        config[key] = parse_bool(value)
++                    elif key in ['log_level', 'log_format']:
++                        config[key] = value.lower()
++                    else:
++                        config[key] = value
++        except Exception as e:
++            print(f"Error reading configuration file '{config_file_path}': {e}", file=sys.stderr)
++            sys.exit(1)
++    return config
++
++def validate_config(config, parser):
++    def error(message):
++        if parser:
++            parser.error(message)
++        print(message, file=sys.stderr)
++        sys.exit(1)
++
++    if not (
++        config.get('recipient') or
++        config.get('upload_recipient') or
++        config.get('download_recipient') or
++        config.get('bcc_recipient')
++    ):
++        error("At least one recipient, upload_recipient, download_recipient, or bcc_recipient must be specified.")
++
++    if not config.get('smtp_server'):
++        error("smtp_server must be specified.")
++
++    if not config.get('from_addr'):
++        error("from_addr must be specified.")
++
++    try:
++        smtp_port = int(config.get('smtp_port', 25))
++    except (TypeError, ValueError):
++        error(f"Invalid smtp_port value: {config.get('smtp_port')}")
++    if not 1 <= smtp_port <= 65535:
++        error(f"Invalid smtp_port value: {smtp_port}")
++    config['smtp_port'] = smtp_port
++
++    try:
++        smtp_timeout = float(config.get('smtp_timeout', 5.0))
++    except (TypeError, ValueError):
++        error(f"Invalid smtp_timeout value: {config.get('smtp_timeout')}")
++    if smtp_timeout <= 0:
++        error(f"Invalid smtp_timeout value: {smtp_timeout}")
++    config['smtp_timeout'] = smtp_timeout
++
++    try:
++        sleep_secs = float(config.get('sleep', 0.5))
++    except (TypeError, ValueError):
++        error(f"Invalid sleep value: {config.get('sleep')}")
++    if sleep_secs < 0:
++        error(f"Invalid sleep value: {sleep_secs}")
++    config['sleep'] = sleep_secs
++
++    log_level = config.get('log_level', 'info')
++    if log_level not in LOG_LEVELS:
++        error(f"Invalid log_level value: {log_level}")
++    config['log_level'] = log_level
++
++    log_format = config.get('log_format', 'full')
++    if log_format not in LOG_FORMATS:
++        error(f"Invalid log_format value: {log_format}")
++    config['log_format'] = log_format
++
++    for key in ['watch_users', 'ignore_users']:
++        pattern = config.get(key)
++        if not pattern:
++            continue
++        try:
++            re.compile(pattern)
++        except re.error as e:
++            error(f"Invalid {key} regex: {e}")
++
++def load_smtp_auth(auth_path):
++    auth_info = {}
++    try:
++        with open(auth_path, 'r') as f:
++            for line in f:
++                line = line.strip()
++                if not line or line.startswith('#'):
++                    continue
++                match = re.match(r'^(\w+)\s*=\s*(.+)$', line)
++                if match:
++                    key, value = match.groups()
++                    key = key.lower()
++                    if key in ['user', 'password']:
++                        auth_info[key] = value
++        if 'user' not in auth_info or 'password' not in auth_info:
++            raise ValueError("Authentication file must contain 'user' and 'password'.")
++    except Exception as e:
++        logging.error(f"Failed to load SMTP authentication info: {e}")
++        sys.exit(1)
++    return auth_info
++
++def get_log_level(config_log_level):
++    level_mapping = {
++        'debug': logging.DEBUG,
++        'info': logging.INFO
++    }
++    return level_mapping.get(config_log_level, logging.INFO)
++
++def get_log_format(config_log_format):
++    format_mapping = {
++        'full': '%(asctime)s %(levelname)s: %(message)s',
++        'sparse': '%(message)s'
++    }
++    return format_mapping.get(config_log_format, '%(asctime)s %(levelname)s: %(message)s')
++
++
++class SparseLogFilter(logging.Filter):
++    """In sparse mode, only pass through actual TransferLog lines."""
++
++    def filter(self, record):
++        # Allow all messages below INFO level (DEBUG, etc.)
++        if record.levelno < logging.INFO:
++            return True
++        # Pass through only lines that parse as valid TransferLog entries.
++        msg = record.getMessage()
++        if parse_xferlog_line(msg) is not None:
++            return True
++        return False
++
++def write_pid_file(pid_path):
++    try:
++        with open(pid_path, 'w') as f:
++            f.write(str(os.getpid()))
++        logging.debug(f"PID file written at {pid_path}")
++    except Exception as e:
++        logging.error(f"Failed to write PID file '{pid_path}': {e}")
++        sys.exit(1)
++
++def remove_pid_file(pid_path):
++    try:
++        if os.path.exists(pid_path):
++            os.remove(pid_path)
++            logging.debug(f"PID file '{pid_path}' removed.")
++    except Exception as e:
++        logging.error(f"Failed to remove PID file '{pid_path}': {e}")
++
++def setup_logging(log_path, log_level, log_format):
++    try:
++        formatter = logging.Formatter(get_log_format(log_format))
++        if log_path:
++            handler = logging.FileHandler(log_path)
++        else:
++            handler = logging.StreamHandler(sys.stdout)
++        handler.setFormatter(formatter)
++        logger = logging.getLogger()
++        logger.setLevel(log_level)
++
++        # Remove existing handlers to prevent duplicate logs
++        if logger.hasHandlers():
++            logger.handlers.clear()
++
++        # Add the custom filter if log_format is 'sparse'
++        if log_format == 'sparse':
++            handler.addFilter(SparseLogFilter())
++
++        logger.addHandler(handler)
++    except Exception as e:
++        print(f"Failed to set up logging: {e}", file=sys.stderr)
++        sys.exit(1)
++
++def construct_from_header(from_name, from_addr):
++    if from_name:
++        return formataddr((from_name, from_addr))
++    else:
++        return from_addr
++
++def send_email(smtp_server, smtp_auth, from_header, recipients, bcc_recipients, subject, body, attachment_path=None):
++    msg = EmailMessage()
++    msg['From'] = from_header
++    msg['To'] = ', '.join(recipients) if recipients else ''
++    msg['Subject'] = subject
++    if bcc_recipients:
++        msg['Bcc'] = ', '.join(bcc_recipients)
++    msg.set_content(body)
++
++    if attachment_path:
++        if os.path.exists(attachment_path):
++            logging.debug(f"Attempting to attach file: {attachment_path}")
++            try:
++                ctype, encoding = mimetypes.guess_type(attachment_path)
++                if ctype is None or encoding is not None:
++                    ctype = 'application/octet-stream'
++                maintype, subtype = ctype.split('/', 1)
++
++                with open(attachment_path, 'rb') as f:
++                    file_data = f.read()
++                    file_name = os.path.basename(attachment_path)
++                    msg.add_attachment(file_data, maintype=maintype, subtype=subtype, filename=file_name)
++                logging.info(f"Successfully attached file '{attachment_path}' to email.")
++            except Exception as e:
++                logging.error(f"Failed to attach file '{attachment_path}': {e}")
++        else:
++            logging.warning(f"Attachment path '{attachment_path}' does not exist. Email sent without attachment.")
++    else:
++        logging.debug("No attachment requested. Email sent without attachment.")
++
++    try:
++        if not recipients and not bcc_recipients:
++            logging.error("No recipients (To/Bcc) configured; skipping email send.")
++            return
++        with smtplib.SMTP(smtp_server['host'], smtp_server['port'], timeout=smtp_server['timeout']) as server:
++            server.ehlo()
++            if smtp_server.get('starttls', False):
++                server.starttls()
++                server.ehlo()
++            if smtp_auth:
++                server.login(smtp_auth['user'], smtp_auth['password'])
++            server.send_message(msg)
++            logging.info(f"Email sent to: {recipients + (bcc_recipients if bcc_recipients else [])}")
++    except Exception as e:
++        logging.error(f"Failed to send email: {e}")
++
++def process_line(line, config, smtp_server, smtp_auth, upload_recipients, download_recipients):
++    rec = parse_xferlog_line(line)
++    if rec is None:
++        logging.debug(f"Unmatched log line: {line}")
++        return
++
++    send_email_flag = False
++
++    if rec.direction == 'i':
++        send_email_flag = True
++    elif rec.direction == 'o' and download_recipients:
++        send_email_flag = True
++
++    if not send_email_flag:
++        return
++
++    # User Filtering
++    if config.get('watch_users'):
++        if not re.fullmatch(config['watch_users'], rec.user):
++            send_email_flag = False
++    elif config.get('ignore_users'):
++        if re.fullmatch(config['ignore_users'], rec.user):
++            send_email_flag = False
++
++    if not send_email_flag:
++        return
++
++    # Handle possible percent-encoding in path
++    file_path = rec.path
++    file_exists = os.path.exists(file_path)
++    if not file_exists:
++        decoded_path = unquote(file_path)
++        if decoded_path != file_path and os.path.exists(decoded_path):
++            file_path = decoded_path
++            file_exists = True
++            logging.debug(f"Adjusted file path to '{file_path}' via percent-decoding.")
++
++    logging.debug(f"Preparing to send email for file: {file_path}")
++
++    # Prepare Email Content
++    file_str = os.path.basename(file_path)
++    transferred = 'uploaded' if rec.direction == 'i' else 'downloaded'
++    subject = f"User '{rec.user}' {transferred} file '{file_str}' via FTP"
++    if config.get('subject'):
++        subject = config['subject']
++
++    bytes_str = "bytes" if rec.size_bytes != 1 else "byte"
++    status = "Completed" if rec.completion != "i" else "Incomplete"
++    secs_str = "secs" if rec.duration_secs != 1 else "sec"
++    type_str = "Binary" if rec.xfer_type != "a" else "ASCII"
++
++    ts_display = rec.timestamp.strftime("%a %b %d %H:%M:%S %Y")
++    attached_note = "(attached)" if config.get('attach_file') and file_exists else ""
++
++    body_lines = [
++        f"File just {transferred} via FTP:",
++        "",
++        f"  User: {rec.user}",
++        f"    Client: {rec.client}",
++        "",
++        f"  File: {file_path} {attached_note}",
++        f"    Size: {rec.size_bytes} {bytes_str}",
++        f"    At: {ts_display}",
++        f"    Duration: {rec.duration_secs} {secs_str}",
++        f"    Status: {status}",
++        f"    Transfer type: {type_str}",
++        "",
++        "Cheers,",
++        "  --ftpmail",
++    ]
++    body = "\n".join(body_lines) + "\n"
++
++    # Determine recipients
++    if rec.direction == 'i':
++        recipients = upload_recipients
++    elif rec.direction == 'o':
++        recipients = download_recipients
++    else:
++        recipients = upload_recipients  # Default to upload recipients
++
++    bcc_recipients = config.get('bcc_recipient', [])
++    if not recipients and not bcc_recipients:
++        logging.error("No recipients (To/Bcc) configured after filtering; skipping email.")
++        return
++
++    # Log attachment info
++    logging.debug(f"Attachment requested: {config.get('attach_file')}, File exists: {file_exists}")
++
++    # Send Email
++    send_email(
++        smtp_server=smtp_server,
++        smtp_auth=smtp_auth,
++        from_header=construct_from_header(config.get('from_name'), config.get('from_addr')),
++        recipients=recipients,
++        bcc_recipients=bcc_recipients,
++        subject=subject,
++        body=body,
++        attachment_path=file_path if config.get('attach_file') else None
++    )
++
++def monitor_fifo(config):
++    # SMTP Server Configuration  
++    smtp_host = config.get('smtp_server')
++    smtp_port = config.get('smtp_port', 25)
++
++    smtp_starttls_raw = config.get('smtp_starttls', False)
++    if isinstance(smtp_starttls_raw, str):
++        smtp_starttls = parse_bool(smtp_starttls_raw)
++    else:
++        smtp_starttls = bool(smtp_starttls_raw)
++
++    smtp_server = {
++        'host': smtp_host,
++        'port': smtp_port,  # Default SMTP port
++        'timeout': config.get('smtp_timeout', 5.0),
++        'starttls': smtp_starttls
++    }
++
++    # Load SMTP Authentication if provided  
++    smtp_auth = None  
++    if config.get('auth'):  
++        smtp_auth = load_smtp_auth(config['auth'])
++
++    # Determine recipients  
++    upload_recipients = config.get('upload_recipient') if config.get('upload_recipient') else config.get('recipient', [])  
++    download_recipients = config.get('download_recipient') if config.get('download_recipient') else None
++
++    # Log the parsed configuration  
++    logging.debug(f"Configuration after parsing: {config}")
++
++    # Open FIFO  
++    fifo_path = config.get('fifo')  
++    if not fifo_path:  
++        logging.error("FIFO path not specified in configuration.")  
++        sys.exit(1)
++
++    def open_fifo():
++        while True:
++            try:
++                if not os.path.exists(fifo_path):
++                    logging.error(f"FIFO path '{fifo_path}' does not exist. Waiting...")
++                    time.sleep(float(config.get('sleep', 0.5)))
++                    continue
++                fifoh = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
++                return os.fdopen(fifoh, 'r')
++            except Exception as e:
++                logging.error(f"Unable to open FIFO '{fifo_path}': {e}. Retrying...")
++                time.sleep(float(config.get('sleep', 0.5)))
++
++    fifo = open_fifo()
++
++    # Conditionally log the "Monitoring FIFO" message based on log_format
++    if config.get('log_format') != 'sparse' and config.get('log'):
++        logging.info(f"Monitoring FIFO: {fifo_path}")
++
++    xferlog_path = config.get('xferlog')
++    xferlog_fh = None
++    if xferlog_path:
++        try:
++            xferlog_fh = open(xferlog_path, 'a', buffering=1)
++        except Exception as e:
++            logging.error(f"Unable to open xferlog file '{xferlog_path}': {e}")
++            xferlog_fh = None
++
++    while True:
++        try:
++            sleep_secs = float(config.get('sleep', 0.5))
++            ready, _, _ = select.select([fifo], [], [], sleep_secs)
++            if not ready:
++                continue
++            line = fifo.readline()
++            if line:
++                line = line.strip()
++                logging.debug(f"Read line from FIFO: {line}")
++
++                # Always write the FIFO line to xferlog if configured
++                if xferlog_fh:
++                    try:
++                        xferlog_fh.write(line + "\n")
++                    except Exception as e:
++                        logging.error(f"Failed to write to xferlog '{xferlog_path}': {e}")
++                        try:
++                            xferlog_fh.close()
++                        except Exception:
++                            pass
++                        xferlog_fh = None
++                process_line(line, config, smtp_server, smtp_auth, upload_recipients, download_recipients)
++            else:
++                # EOF or no writer; reopen the FIFO to resume reads when writer returns.
++                try:
++                    fifo.close()
++                except Exception:
++                    pass
++                time.sleep(sleep_secs)
++                fifo = open_fifo()
++        except KeyboardInterrupt:
++            logging.info("Received KeyboardInterrupt. Exiting.")
++            break
++        except BlockingIOError:
++            time.sleep(float(config.get('sleep', 0.5)))
++        except Exception as e:
++            logging.error(f"Error reading from FIFO: {e}")
++            time.sleep(float(config.get('sleep', 0.5)))
++
++    fifo.close()
++    if xferlog_fh:
++        try:
++            xferlog_fh.close()
++        except Exception:
++            pass
++
++def main():
++    config_file_path = parse_config_path() or default_config_path()
++    config = load_config_file(config_file_path)
++    config = parse_arguments(config)
++    preflight_config(config)
++    run_service(config)
++
++def preflight_config(config):
++    log_path = config.get('log', '/var/log/ftpmail.log')
++    if log_path:
++        try:
++            with open(log_path, 'a'):
++                pass
++        except Exception as e:
++            print(f"Unable to open log file '{log_path}': {e}", file=sys.stderr)
++            sys.exit(1)
++
++    xferlog_path = config.get('xferlog', '/var/log/proftpd/xferlog')
++    if xferlog_path:
++        try:
++            with open(xferlog_path, 'a'):
++                pass
++        except Exception as e:
++            print(f"Unable to open xferlog file '{xferlog_path}': {e}", file=sys.stderr)
++            sys.exit(1)
++
++
++    pid_file = config.get('pid', '/tmp/ftpmail.pid')
++    pid_dir = os.path.dirname(pid_file) or '.'
++    if not os.path.isdir(pid_dir) or not os.access(pid_dir, os.W_OK):
++        print(f"PID directory '{pid_dir}' is not writable; configure --pid to a writable path.", file=sys.stderr)
++        sys.exit(1)
++
++def run_service(config, manage_pid=False):
++    log_level = get_log_level(config.get('log_level', 'info'))
++    log_format = config.get('log_format', 'full')
++    setup_logging(config.get('log'), log_level, log_format)
++
++    pid_file = config.get('pid', '/tmp/ftpmail.pid') if manage_pid else None
++    if pid_file:
++        write_pid_file(pid_file)
++
++    def handle_exit(signum, frame):
++        if not (config.get('log_level', 'info') == 'info' and config.get('log_format', 'full') == 'sparse'):
++            logging.info(f"Received signal {signum}. Exiting.")
++        if pid_file:
++            remove_pid_file(pid_file)
++        sys.exit(0)
++
++    signal.signal(signal.SIGTERM, handle_exit)
++    signal.signal(signal.SIGINT, handle_exit)
++
++    try:
++        monitor_fifo(config)
++    finally:
++        if pid_file:
++            remove_pid_file(pid_file)
++
++if __name__ == '__main__':
++    main()

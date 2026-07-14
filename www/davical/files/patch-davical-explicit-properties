@@ -1,0 +1,244 @@
+diff --git a/inc/CalDAVRequest.php b/inc/CalDAVRequest.php
+index 2a563320..1663523e 100644
+--- inc/CalDAVRequest.php
++++ inc/CalDAVRequest.php
+@@ -127,6 +127,7 @@ class CalDAVRequest
+   public $permissions;
+   public $_is_collection;
+   public $_is_principal;
++  public $is_principal;
+   public $_is_proxy_request;
+   public $_locks_found;
+   public $xml_tags;
+@@ -1379,4 +1380,3 @@ EOSQL;
+     }
+   }
+ }
+-
+diff --git a/inc/DAVPrincipal.php b/inc/DAVPrincipal.php
+index 1f43f045..49257581 100644
+--- inc/DAVPrincipal.php
++++ inc/DAVPrincipal.php
+@@ -18,6 +18,9 @@ require_once('Principal.php');
+ */
+ class DAVPrincipal extends Principal
+ {
++  public $dav_displayname;
++  public $xmpp_server;
++  public $xmpp_uri;
+ 
+   /**
+   * @var RFC4791: Identifies the URL(s) of any WebDAV collections that contain
+diff --git a/inc/DAVResource.php b/inc/DAVResource.php
+index dcb45078..f9d36248 100644
+--- inc/DAVResource.php
++++ inc/DAVResource.php
+@@ -58,6 +58,11 @@ class DAVResource
+   */
+   protected $contenttype;
+ 
++  /**
++  * @var string Locale for response rendering
++  */
++  public $locale;
++
+   /**
+   * @var string The canonical name which this resource exists at
+   */
+@@ -78,6 +83,11 @@ class DAVResource
+   */
+   private $privileges;
+ 
++  /**
++  * @var array Cached lock rows, keyed by lock token
++  */
++  private $_locks_found;
++
+   /**
+   * @var bool True if this resource is a collection of any kind
+   */
+diff --git a/inc/DAViCalSession.php b/inc/DAViCalSession.php
+index c0637851..901a8fc6 100644
+--- inc/DAViCalSession.php
++++ inc/DAViCalSession.php
+@@ -253,4 +253,3 @@ EOTEXT;
+ 
+ $session = new DAViCalSession();
+ $session->_CheckLogin();
+-
+diff --git a/inc/HTTPAuthSession.php b/inc/HTTPAuthSession.php
+index 64b406e5..4b87b0b0 100644
+--- inc/HTTPAuthSession.php
++++ inc/HTTPAuthSession.php
+@@ -49,6 +49,12 @@ class HTTPAuthSession {
+   */
+   public $fullname;
+ 
++  /**
++  * User locale
++  * @var locale string
++  */
++  public $locale;
++
+   /**
+   * Group rights (not implemented)
+   * @todo
+diff --git a/inc/PublicSession.php b/inc/PublicSession.php
+index 94d48ab6..eb757411 100644
+--- inc/PublicSession.php
++++ inc/PublicSession.php
+@@ -49,6 +49,12 @@ class PublicSession {
+   */
+   public $fullname;
+ 
++  /**
++  * User locale
++  * @var locale string
++  */
++  public $locale;
++
+   /**
+   * Group rights
+   * @var groups array
+@@ -104,4 +110,3 @@ class PublicSession {
+   }
+ 
+ }
+-
+diff --git a/inc/RRule.php b/inc/RRule.php
+index 9e058bad..306447ab 100644
+--- inc/RRule.php
++++ inc/RRule.php
+@@ -633,6 +633,7 @@ class RepeatRule {
+   private $finished;
+   private $current_base;
+   private $current_set;
++  private $keys = array();
+   private $original_rule;
+   private $frequency_string;
+ 
+diff --git a/inc/caldav-client-v2.php b/inc/caldav-client-v2.php
+index 8488b418..0346cf89 100644
+--- inc/caldav-client-v2.php
++++ inc/caldav-client-v2.php
+@@ -88,6 +88,9 @@ class CalDAVClient {
+   protected $httpResponseBody = "";
+ 
+   protected $parser; // our XML parser object
++  protected $request_url;
++  protected $xmlnodes = array();
++  protected $xmltags = array();
+ 
+   private $debug = false; // Whether we are debugging
+ 
+diff --git a/inc/caldav-client.php b/inc/caldav-client.php
+index 31e1ec03..da46b9c9 100644
+--- inc/caldav-client.php
++++ inc/caldav-client.php
+@@ -24,6 +24,8 @@ class CalDAVClient {
+   * @var string
+   */
+   var $base_url, $user, $pass, $calendar, $entry, $protocol, $server, $port;
++  var $resultcode = 0;
++  var $xml_tags = array();
+ 
+   /**
+   * The useragent which is sent to the caldav server
+diff --git a/inc/drivers_ldap.php b/inc/drivers_ldap.php
+index c3203fef..a4efa364 100644
+--- inc/drivers_ldap.php
++++ inc/drivers_ldap.php
+@@ -18,6 +18,13 @@ require_once("auth-functions.php");
+  */
+ class ldapDriver
+ {
++  public $valid = true;
++  private $baseDNUsers;
++  private $baseDNGroups;
++  private $filterUsers;
++  private $filterGroups;
++  private $ldap_query_all;
++  private $ldap_query_one;
+   /**#@+
+   * @access private
+   */
+diff --git a/inc/drivers_pwauth_pam.php b/inc/drivers_pwauth_pam.php
+index d7e13755..60fc36eb 100644
+--- inc/drivers_pwauth_pam.php
++++ inc/drivers_pwauth_pam.php
+@@ -21,6 +21,7 @@ require_once("auth-functions.php");
+  */
+ class pwauthPamDriver
+ {
++  public $valid = true;
+   /**#@+
+    * @access private
+    */
+diff --git a/inc/drivers_squid_pam.php b/inc/drivers_squid_pam.php
+index d3a23610..c0b4f90e 100644
+--- inc/drivers_squid_pam.php
++++ inc/drivers_squid_pam.php
+@@ -18,6 +18,7 @@ require_once("auth-functions.php");
+  */
+ class squidPamDriver
+ {
++  public $valid = true;
+   /**#@+
+   * @access private
+   */
+diff --git a/inc/iSchedule.php b/inc/iSchedule.php
+index ca426def..00548d0b 100644
+--- inc/iSchedule.php
++++ inc/iSchedule.php
+@@ -27,6 +27,18 @@ class iSchedule
+   public $parsed;
+   public $selector;
+   public $domain;
++  private $capabilities_xml;
++  private $parsed_ignored = array();
++  private $remote_port;
++  private $remote_url;
++  private $remote_user;
++  private $schedule_private_key;
++  private $scheduling_dkim_algo;
++  private $scheduling_dkim_domain;
++  private $scheduling_dkim_selector;
++  private $tosign;
++  private $valid_time;
++  private $xml_tags = array();
+   private $dk;
+   private $DKSig;
+   private $try_anyway = false;
+@@ -700,4 +712,3 @@ class iSchedule
+     return true;
+   }
+ }
+-
+diff --git a/inc/pubsub.php b/inc/pubsub.php
+index e29ab429..a3f06951 100644
+--- inc/pubsub.php
++++ inc/pubsub.php
+@@ -10,6 +10,18 @@
+ 
+ class xmpp
+ {
++	private $command = Array();
++	private $handleCommand = Array();
++	private $currentXMLNode;
++	private $doc;
++	private $debug = false;
++	private $loggedIn = false;
++	private $nextreply;
++	private $original_port;
++	private $original_server;
++	private $pubsub = Array();
++	private $recvHandler = Array();
++	private $sendHandler = Array();
+ 	private $connection,$streamTagBegin,$streamTagEnd,$mesgcount=0,$ready,$moredata=false,$username,$stream,$xmlparser,$xquery;
+ 	private $namespaces = Array();
+ 	private $recvTags = Array();
+@@ -720,4 +732,3 @@ function log_caldav_action( $action_type, $uid, $user_no, $collection_id, $dav_n
+ 	$t->pubsubPublish ( '', 'set', '/davical-' . $row->principal_id , '<item xmlns="plist-apple" id="' . $uid . ' " ><plistfrag xmlns="plist-apple"><key>davical</key><string>' . $uid . '</string></plistfrag></item>', $uid );
+ 	$t->close();
+ }
+-

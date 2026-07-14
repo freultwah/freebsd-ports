@@ -1,0 +1,3 @@
+lib/dovecot/lib25_xaps_imap_plugin.so
+lib/dovecot/lib25_xaps_push_notification_plugin.so
+@sample etc/dovecot/95-xaps.conf.sample

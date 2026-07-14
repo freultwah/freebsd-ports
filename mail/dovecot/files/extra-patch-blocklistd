@@ -1,0 +1,164 @@
+--- src/login-common/Makefile.am.orig
++++ src/login-common/Makefile.am
+@@ -19,12 +19,14 @@
+ 	login-proxy-state.c \
+ 	login-settings.c \
+ 	main.c \
++	pfilter.c \
+ 	sasl-server.c
+ 
+ headers = \
+ 	access-lookup.h \
+ 	client-common.h \
+ 	login-common.h \
++	pfilter.h \
+ 	login-proxy.h \
+ 	login-proxy-state.h \
+ 	login-settings.h \
+--- src/login-common/Makefile.in.orig
++++ src/login-common/Makefile.in
+@@ -193,7 +193,7 @@
+ liblogin_la_LIBADD =
+ am_liblogin_la_OBJECTS = access-lookup.lo client-common.lo \
+ 	client-common-auth.lo login-proxy.lo login-proxy-state.lo \
+-	login-settings.lo main.lo sasl-server.lo
++	login-settings.lo main.lo pfilter.lo sasl-server.lo
+ liblogin_la_OBJECTS = $(am_liblogin_la_OBJECTS)
+ AM_V_P = $(am__v_P_@AM_V@)
+ am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
+@@ -502,12 +502,14 @@
+ 	login-proxy-state.c \
+ 	login-settings.c \
+ 	main.c \
++	pfilter.c \
+ 	sasl-server.c
+ 
+ headers = \
+ 	access-lookup.h \
+ 	client-common.h \
+ 	login-common.h \
++	pfilter.h \
+ 	login-proxy.h \
+ 	login-proxy-state.h \
+ 	login-settings.h \
+--- src/login-common/client-common-auth.c.orig
++++ src/login-common/client-common-auth.c
+@@ -15,6 +15,7 @@
+ #include "dsasl-client.h"
+ #include "master-service-ssl-settings.h"
+ #include "client-common.h"
++#include "pfilter.h"
+ 
+ /* If we've been waiting auth server to respond for over this many milliseconds,
+    send a "waiting" message. */
+@@ -60,6 +61,40 @@
+ 	return CLIENT_AUTH_FAIL_CODE_NONE;
+ }
+ 
++static bool
++client_auth_is_blocklistd_failure(enum client_auth_fail_code fail_code)
++{
++	switch (fail_code) {
++	case CLIENT_AUTH_FAIL_CODE_NONE:
++		return TRUE;
++	case CLIENT_AUTH_FAIL_CODE_AUTHZFAILED:
++	case CLIENT_AUTH_FAIL_CODE_TEMPFAIL:
++	case CLIENT_AUTH_FAIL_CODE_USER_DISABLED:
++	case CLIENT_AUTH_FAIL_CODE_PASS_EXPIRED:
++	case CLIENT_AUTH_FAIL_CODE_INVALID_BASE64:
++	case CLIENT_AUTH_FAIL_CODE_LOGIN_DISABLED:
++	case CLIENT_AUTH_FAIL_CODE_MECH_INVALID:
++	case CLIENT_AUTH_FAIL_CODE_MECH_SSL_REQUIRED:
++	case CLIENT_AUTH_FAIL_CODE_ANONYMOUS_DENIED:
++		return FALSE;
++	}
++	return FALSE;
++}
++
++static void
++client_auth_blocklist_notify(struct client *client,
++			     const struct client_auth_reply *reply)
++{
++	enum client_auth_fail_code fail_code = reply == NULL ?
++		CLIENT_AUTH_FAIL_CODE_NONE : reply->fail_code;
++
++	if (client->fd == -1 ||
++	    !client_auth_is_blocklistd_failure(fail_code))
++		return;
++
++	pfilter_notify(1, client->fd, login_binary->protocol);
++}
++
+ static void client_auth_failed(struct client *client)
+ {
+ 	i_free_and_null(client->master_data_prefix);
+@@ -751,6 +786,7 @@
+ 	      const char *data, const char *const *args)
+ {
+ 	struct client_auth_reply reply;
++	bool blocklist_notified = FALSE;
+ 
+ 	i_assert(!client->destroyed ||
+ 		 sasl_reply == SASL_SERVER_REPLY_AUTH_ABORTED ||
+@@ -782,9 +818,16 @@
+ 			client->last_auth_fail = reply.fail_code;
+ 			reply.nologin = TRUE;
+ 			reply.all_fields = args;
++			if (sasl_reply == SASL_SERVER_REPLY_AUTH_FAILED) {
++				client_auth_blocklist_notify(client, &reply);
++				blocklist_notified = TRUE;
++			}
+ 			if (client_auth_handle_reply(client, &reply, FALSE))
+ 				break;
+ 		}
++		if (sasl_reply == SASL_SERVER_REPLY_AUTH_FAILED &&
++		    !blocklist_notified)
++			client_auth_blocklist_notify(client, NULL);
+ 
+ 		if (sasl_reply == SASL_SERVER_REPLY_AUTH_ABORTED) {
+ 			client_auth_result(client, CLIENT_AUTH_RESULT_ABORTED,
+--- src/login-common/pfilter.c.orig
++++ src/login-common/pfilter.c
+@@ -0,0 +1,38 @@
++/* Copyright (c) 2026 Dovecot authors, see the included COPYING file */
++
++#include "pfilter.h"
++
++#ifdef USE_BLOCKLISTD
++
++#include <stdio.h> /* for NULL */
++#include <blocklist.h>
++
++static struct blocklist *blstate;
++
++void pfilter_notify(int action, int fd, const char *service)
++{
++	if (service == NULL)
++		service = "dovecot-login";
++
++	if (blstate == NULL)
++		blstate = blocklist_open();
++	if (blstate == NULL)
++		return;
++
++	(void)blocklist_r(blstate, action, fd, service);
++	if (action == 0) {
++		blocklist_close(blstate);
++		blstate = NULL;
++	}
++}
++
++#else
++
++void pfilter_notify(int action, int fd, const char *service)
++{
++	(void)action;
++	(void)fd;
++	(void)service;
++}
++
++#endif
+--- src/login-common/pfilter.h.orig
++++ src/login-common/pfilter.h
+@@ -0,0 +1 @@
++void pfilter_notify(int action, int fd, const char *service);

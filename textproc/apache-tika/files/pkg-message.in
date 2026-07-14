@@ -1,0 +1,22 @@
+[
+{ type: install
+  message: <<EOM
+Make sure to edit the following files to adapt to your setup:
+
+%%LOCALBASE%%/etc/tika.in.sh
+
+The port is configured to listen only on localhost, port 9998.
+
+To enable the port execute:
+sysrc tika_enable="YES"
+
+And start it with:
+service tika start
+EOM
+}
+{ type: upgrade
+  message: <<EOM
+If you update, make sure you update your %%LOCALBASE%%/etc/tika.in.sh
+EOM
+}
+]

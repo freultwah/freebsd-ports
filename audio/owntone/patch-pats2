@@ -1,0 +1,23 @@
+diff --git a/src/httpd_daap.c b/src/httpd_daap.c
+index 5fed4db9..fd1e323b 100644
+--- src/httpd_daap.c
++++ src/httpd_daap.c
+@@ -2264,8 +2264,6 @@ daap_request(struct httpd_request *hreq)
+
+   ret = hreq->handler(hreq);
+
+-  daap_reply_send(hreq, ret);
+-
+   clock_gettime(CLOCK_MONOTONIC, &end);
+   msec = (end.tv_sec * 1000 + end.tv_nsec / 1000000) - (start.tv_sec * 1000 + start.tv_nsec / 1000000);
+
+@@ -2273,6 +2271,9 @@ daap_request(struct httpd_request *hreq)
+
+   if (ret == DAAP_REPLY_OK && msec > cache_daap_threshold() && hreq->user_agent)
+     cache_daap_add(hreq->uri, hreq->user_agent, ((struct daap_session *)hreq->extra_data)->is_remote, msec);
++
++  daap_reply_send(hreq, ret);
++
+ }
+
+ int

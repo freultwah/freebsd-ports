@@ -1,0 +1,109 @@
+--- contrib/ftpmail.orig	2023-06-06 04:52:02.000000000 +0300
++++ contrib/ftpmail	2023-06-19 20:09:57.935014000 +0300
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env perl
++#!/usr/local/bin/perl
+ # ---------------------------------------------------------------------------
+ # Copyright (C) 2008-2017 TJ Saunders <tj@castaglia.org>
+ #
+@@ -18,25 +18,41 @@
+ # ---------------------------------------------------------------------------
+ 
+ use strict;
++use utf8;
+ 
+ use File::Basename qw(basename);
++use Encode;
+ use Getopt::Long;
+ use Mail::Sendmail;
+ use MIME::Base64 qw(encode_base64);
+ use Time::HiRes qw(usleep);
++use Proc::Daemon;
+ 
+ my $program = basename($0);
+ 
++# Add the PID file path
++my $pid_file = '/var/run/ftpmail.pid';
++
+ my $opts = {};
+ GetOptions($opts, 'attach-file', 'fifo=s', 'from=s', 'help', 'ignore-users=s',
+   'log=s', 'recipient=s@', 'upload-recipient=s@', 'download-recipient=s@',
+-  'sleep=s', 'smtp-server=s', 'subject=s', 'watch-users=s', 'auth=s');
++  'sleep=s', 'smtp-server=s', 'subject=s', 'watch-users=s', 'auth=s',
++  'pid=s');  # Add the --pid option
+ 
+ if ($opts->{help}) {
+   usage();
+   exit 0;
+ }
+ 
++# Update the PID file location if provided via the --pid option
++$pid_file = $opts->{pid} if defined $opts->{pid};
++
++# Daemonize the script
++Proc::Daemon::Init();
++
++# Write the PID file
++write_pid_file($pid_file);
++
+ unless ($opts->{fifo}) {
+   print STDERR "$program: missing required --fifo parameter\n";
+   exit 1;
+@@ -267,11 +283,19 @@
+   return $info;
+ }
+ 
++sub write_pid_file {
++  my ($pid_file) = @_;
++
++  open(my $fh, '>', $pid_file) or die "Unable to write PID file: $!\n";
++  print $fh $$;
++  close($fh);
++}
++
+ sub send_email {
+   my $transfer_info = shift;
+ 
+   my $file = $transfer_info->{file};
+-  my $file_str = basename($file);
++  my $file_str = decode_utf8(basename($file));
+ 
+   my $transferred = 'uploaded';
+   if ($transfer_info->{direction} eq 'o') {
+@@ -333,6 +357,9 @@
+     Subject => $subject,
+   };
+ 
++    # Set the charset to UTF-8
++    $email_info->{'charset'} = 'UTF-8';
++
+   if ($transfer_info->{direction} eq 'i') {
+     $email_info->{To} = join(', ', @$upload_recipients);
+ 
+@@ -353,7 +380,7 @@
+       $boundary = '--' . $boundary;
+ 
+       $email_info->{Body} .= "$boundary\n";
+-      $email_info->{Body} .= "Content-Type: text/plain; charset=\"iso-8859-1\"\n";
++      $email_info->{Body} .= "Content-Type: text/plain; charset=\"UTF-8\"\n";
+       $email_info->{Body} .= "Content-Transfer-Encoding: quoted-printable\n\n";
+       $email_info->{Body} .= "$text\n";
+ 
+@@ -374,7 +401,7 @@
+ 
+         $email_info->{Body} .= "Content-Disposition: attachment; filename=\"$file\"\n";
+         if ($transfer_info->{transfer_type} eq 'a') {
+-          $email_info->{Body} .= "Content-Type: text/plain; charset=\"iso-8859-1\"\n\n";
++          $email_info->{Body} .= "Content-Type: text/plain; charset=\"utf-8\"\n\n";
+           $email_info->{Body} .= $attach;
+ 
+         } else {
+@@ -398,7 +425,7 @@
+     }
+ 
+   } else {
+-    $email_info->{Body} = $text;
++    $email_info->{Body} = encode_utf8($text);
+   }
+ 
+   my $res = Mail::Sendmail::sendmail(%$email_info);

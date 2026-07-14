@@ -1,0 +1,35 @@
+diff --git a/src/mdns_avahi.c b/src/mdns_avahi.c
+index dcda47f2..e7a3e648 100644
+--- src/mdns_avahi.c
++++ src/mdns_avahi.c
+@@ -582,7 +582,7 @@ connection_test(int family, const char *address, const char *address_log, int po
+   char strport[32];
+   int sock;
+   fd_set fdset;
+-  struct timeval timeout = { MDNS_CONNECT_TEST_TIMEOUT, 0 };
++  struct timeval timeout;
+   socklen_t len;
+   int error;
+   int retval;
+@@ -590,6 +590,8 @@ connection_test(int family, const char *address, const char *address_log, int po
+
+   retval = -1;
+
++  timeout.tv_sec = MDNS_CONNECT_TEST_TIMEOUT;
++  timeout.tv_usec = 0;
+   memset(&hints, 0, sizeof(struct addrinfo));
+   hints.ai_family = family;
+   hints.ai_socktype = SOCK_STREAM;
+@@ -610,6 +612,12 @@ connection_test(int family, const char *address, const char *address_log, int po
+       goto out_free_ai;
+     }
+
++  if (sock >= FD_SETSIZE)
++    {
++      DPRINTF(E_WARN, L_MDNS, "The number of file descriptor opened overflow the system capability %s\n", strerror(errno));
++      goto out_close_socket;
++    }
++
+   ret = connect(sock, ai->ai_addr, ai->ai_addrlen);
+   if (ret < 0 && errno != EINPROGRESS)
+     {

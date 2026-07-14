@@ -1,0 +1,4 @@
+Glances is a cross-platform monitoring tool which aims to present a
+maximum of information in a minimum of space through a curses or web
+interface. It can dynamically adapt the displayed information depending
+on the terminal size.

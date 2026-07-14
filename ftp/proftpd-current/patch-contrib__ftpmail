@@ -1,0 +1,175 @@
+--- contrib/ftpmail.orig	2023-06-06 17:57:42.199584000 +0300
++++ contrib/ftpmail	2025-04-06 14:34:57.158662000 +0300
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env perl
++#!/usr/local/bin/perl
+ # ---------------------------------------------------------------------------
+ # Copyright (C) 2008-2017 TJ Saunders <tj@castaglia.org>
+ #
+@@ -18,25 +18,57 @@
+ # ---------------------------------------------------------------------------
+ 
+ use strict;
++use Encode::Guess;
+ 
+ use File::Basename qw(basename);
++use Encode;
+ use Getopt::Long;
+ use Mail::Sendmail;
+ use MIME::Base64 qw(encode_base64);
+ use Time::HiRes qw(usleep);
++use Proc::Daemon;
+ 
+ my $program = basename($0);
+ 
++# Add the PID file path
++my $pid_file = '/var/run/ftpmail.pid';
++
+ my $opts = {};
+-GetOptions($opts, 'attach-file', 'fifo=s', 'from=s', 'help', 'ignore-users=s',
+-  'log=s', 'recipient=s@', 'upload-recipient=s@', 'download-recipient=s@',
+-  'sleep=s', 'smtp-server=s', 'subject=s', 'watch-users=s', 'auth=s');
++GetOptions(
++    $opts, 
++    'from-name=s',
++    'attach-file', 
++    'fifo=s', 
++    'from=s',
++    'help', 
++    'ignore-users=s',
++    'log=s', 
++    'recipient=s@', 
++    'upload-recipient=s@',
++    'download-recipient=s@',
++    'bcc-recipient=s@',
++    'sleep=s', 
++    'smtp-server=s', 
++    'subject=s', 
++    'watch-users=s',
++    'auth=s',
++    'pid=s',
++);
+ 
+ if ($opts->{help}) {
+   usage();
+   exit 0;
+ }
+ 
++# Update the PID file location if provided via the --pid option
++$pid_file = $opts->{pid} if defined $opts->{pid};
++
++# Daemonize the script
++Proc::Daemon::Init();
++
++# Write the PID file
++write_pid_file($pid_file);
++
+ unless ($opts->{fifo}) {
+   print STDERR "$program: missing required --fifo parameter\n";
+   exit 1;
+@@ -47,7 +79,7 @@
+   print STDERR "$program: missing required --from parameter\n";
+   exit 1;
+ }
+-my $from = $opts->{from};
++my $from = exists $opts->{'from-name'} ? "$opts->{'from-name'} <$opts->{from}>" : $opts->{from};
+ 
+ unless ($opts->{recipient} ||
+         $opts->{'upload-recipient'}) {
+@@ -267,11 +299,19 @@
+   return $info;
+ }
+ 
++sub write_pid_file {
++  my ($pid_file) = @_;
++
++  open(my $fh, '>', $pid_file) or die "Unable to write PID file: $!\n";
++  print $fh $$;
++  close($fh);
++}
++
+ sub send_email {
+   my $transfer_info = shift;
+ 
+   my $file = $transfer_info->{file};
+-  my $file_str = basename($file);
++  my $file_str = decode_utf8(basename($file));
+ 
+   my $transferred = 'uploaded';
+   if ($transfer_info->{direction} eq 'o') {
+@@ -327,12 +367,25 @@
+ 
+ EOT
+ 
++  # Handle the possible encodings
++  my $decoder = guess_encoding($text, 'utf8', 'latin1');
++
++  if (ref $decoder) {
++    $text = $decoder->decode($text);  # If guess succeeded, decode.
++  } else {
++    $text = Encode::decode_utf8($text);  # If not, fallback to UTF-8.
++  }
++
+   my $email_info = {
+     smtp => $smtp_server,
+     From => $from,
+     Subject => $subject,
++    'Content-type' => 'text/plain; charset="UTF-8"',
+   };
+ 
++    # Set the charset to UTF-8
++    $email_info->{'charset'} = 'UTF-8';
++
+   if ($transfer_info->{direction} eq 'i') {
+     $email_info->{To} = join(', ', @$upload_recipients);
+ 
+@@ -340,10 +393,18 @@
+     $email_info->{To} = join(', ', @$download_recipients);
+   }
+ 
++  if ($opts->{'bcc-recipient'}) {  
++    $email_info->{'Bcc'} = join(', ', @{$opts->{'bcc-recipient'}});  
++  }
++
+   if ($opts->{'auth'}) {
+     $email_info->{'auth'} = $smtp_auth;
+   }
+ 
++  if ($opts->{'bcc-recipient'}) {  
++    $email_info->{'Bcc'} = join(', ', @{$opts->{'bcc-recipient'}});  
++  }
++
+   if ($opts->{'attach-file'}) {
+     if (-e $file) {
+       $email_info->{'MIME-Version'} = '1.0';
+@@ -353,7 +414,6 @@
+       $boundary = '--' . $boundary;
+ 
+       $email_info->{Body} .= "$boundary\n";
+-      $email_info->{Body} .= "Content-Type: text/plain; charset=\"iso-8859-1\"\n";
+       $email_info->{Body} .= "Content-Transfer-Encoding: quoted-printable\n\n";
+       $email_info->{Body} .= "$text\n";
+ 
+@@ -374,7 +434,7 @@
+ 
+         $email_info->{Body} .= "Content-Disposition: attachment; filename=\"$file\"\n";
+         if ($transfer_info->{transfer_type} eq 'a') {
+-          $email_info->{Body} .= "Content-Type: text/plain; charset=\"iso-8859-1\"\n\n";
++          $email_info->{Body} .= "Content-Type: text/plain; charset=\"utf-8\"\n\n";
+           $email_info->{Body} .= $attach;
+ 
+         } else {
+@@ -398,7 +458,7 @@
+     }
+ 
+   } else {
+-    $email_info->{Body} = $text;
++    $email_info->{Body} = encode_utf8($text);
+   }
+ 
+   my $res = Mail::Sendmail::sendmail(%$email_info);
+@@ -488,3 +548,4 @@
+ 
+ EOH
+ }
++

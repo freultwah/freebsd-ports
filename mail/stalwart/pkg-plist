@@ -1,0 +1,4 @@
+bin/stalwart
+@dir(stalwart,stalwart,755) etc/stalwart
+@dir(stalwart,stalwart,755) /var/db/stalwart
+@dir(stalwart,stalwart,755) /var/db/stalwart/data

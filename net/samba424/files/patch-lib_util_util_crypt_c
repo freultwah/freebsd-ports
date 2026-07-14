@@ -1,0 +1,13 @@
+--- lib/util/util_crypt.c.orig	2026-01-20 15:42:54.186816700 +0000
++++ lib/util/util_crypt.c	2026-02-24 10:23:58.656730000 +0000
+@@ -2,7 +2,9 @@
+ #include "data_blob.h"
+ #include "discard.h"
+ #include <talloc.h>
+-#ifdef HAVE_CRYPT_H
++#ifdef __FreeBSD__
++#include <unistd.h>
++#elif defined(HAVE_CRYPT_H)
+ #include <crypt.h>
+ #endif
+ #include "util_crypt.h"

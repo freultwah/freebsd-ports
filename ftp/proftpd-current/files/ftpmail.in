@@ -1,0 +1,41 @@
+#!/bin/sh
+#
+# PROVIDE: ftpmail
+# REQUIRE: DAEMON NETWORKING
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="ftpmail"
+rcvar="ftpmail_enable"
+
+command=%%PREFIX%%/bin/${name}.py
+command_interpreter="python3"
+pidfile=/var/run/${name}.pid
+
+start_precmd="${name}_prestart"
+start_cmd="${name}_start"
+
+description="ProFTPd TransferLog Monitoring and Email Notification Service"
+
+ftpmail_prestart() {
+    fifo_path="/var/log/proftpd/xferlog.fifo"
+
+    if [ ! -p "$fifo_path" ]; then
+        echo "FIFO $fifo_path does not exist or is not a named pipe." >&2
+        exit 1
+    fi
+}
+
+load_rc_config $name
+
+: ${ftpmail_enable:="no"}
+
+PATH="%%PREFIX%%/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+ftpmail_start()
+{
+        /usr/sbin/daemon -p "${pidfile}" "${command}"
+}
+
+run_rc_command "$1"

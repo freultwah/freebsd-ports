@@ -1,0 +1,39 @@
+--- ./src/Cedar/Cedar.c.orig	2025-07-17 16:13:58.000000000 +0000
++++ ./src/Cedar/Cedar.c	2025-12-15 09:54:46.285591000 +0000
+@@ -1638,9 +1638,15 @@
+ 	Format(tmp, sizeof(tmp),
+ 		"Version %u.%02u Build %u"
+ 		"%s"    // Alpha, Beta, Release Candidate or nothing
++#if defined(SE_TAGNAME)
++		"(%s) " // FreeBSD ports version
++#endif
+ 		"(%s)", // Language
+ 		CEDAR_VERSION_MAJOR, CEDAR_VERSION_MINOR, CEDAR_VERSION_BUILD,
+ 		c->Beta == 0 ? " " : tmp2,
++#if defined(SE_TAGNAME)
++		SE_TAGNAME,
++#endif
+ 		_SS("LANGSTR"));
+ 	Trim(tmp);
+ 
+--- ./src/CMakeLists.txt.orig	2025-07-17 16:13:58.000000000 +0000
++++ ./src/CMakeLists.txt	2025-12-15 09:56:06.447395000 +0000
+@@ -115,6 +115,7 @@
+   set(SE_DBDIR "" CACHE STRING "Directory where config files are saved")
+   set(SE_LOGDIR "" CACHE STRING "Directory where log files are written")
+   set(SE_PIDDIR "" CACHE STRING "Directory where PID files are put")
++  set(SE_TAGNAME "" CACHE STRING "FreeBSD ports version string")
+ 
+   if(SE_DBDIR)
+     add_definitions(-DSE_DBDIR="${SE_DBDIR}")
+@@ -128,6 +129,10 @@
+     add_definitions(-DSE_PIDDIR="${SE_PIDDIR}")
+   endif()
+ 
++  if(SE_TAGNAME)
++    add_definitions(-DSE_TAGNAME="${SE_TAGNAME}")
++  endif()
++
+   # Use system libraries instead of bundled
+   set(USE_SYSTEM_CPU_FEATURES false CACHE BOOL "Use system cpu_features")
+ endif()

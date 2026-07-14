@@ -1,0 +1,162 @@
+#!/bin/sh
+#
+# Copyright (c) 2014, Radim Kolar
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+#  * Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+# DAMAGE.
+
+# $FreeBSD: head/textproc/apache-tika/files/tika.in 481923 2018-10-12 19:41:06Z mfechner $
+#
+# PROVIDE: tika
+# REQUIRE: LOGIN
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name=tika
+rcvar=tika_enable
+load_rc_config $name
+
+: ${tika_enable:=NO}
+: ${tika_user:=tika}
+: ${tika_group:=tika}
+: ${tika_config:=%%LOCALBASE%%/etc/tika.in.sh}
+: ${tika_command:=%%LOCALBASE%%/tika/bin/tika}
+: ${tika_pid_dir:=/var/run/tika}
+: ${tika_port:=9998}
+: ${tika_host:=}
+
+tika_load_settings()
+{
+	if [ ! -r "${tika_config}" ]; then
+		return 0
+	fi
+
+	TIKA_PID_DIR=
+	TIKA_PORT=
+	TIKA_HOST=
+	. "${tika_config}"
+
+	if [ -n "${TIKA_PID_DIR}" ]; then
+		tika_pid_dir="${TIKA_PID_DIR}"
+	fi
+	if [ -n "${TIKA_PORT}" ]; then
+		tika_port="${TIKA_PORT}"
+	fi
+	if [ -n "${TIKA_HOST}" ]; then
+		tika_host="${TIKA_HOST}"
+	fi
+}
+
+tika_find_pids()
+{
+	local _host_re _match
+
+	if [ -n "${tika_host}" ]; then
+		_host_re="( -h ${tika_host}| -h 127\\.0\\.0\\.1)?"
+	else
+		_host_re="( -h [^ ]+)?"
+	fi
+
+	_match=$(pgrep -f "java .*tika-server\\.jar .* -p ${tika_port}${_host_re}|java .*org\\.apache\\.tika\\.server\\.core\\.TikaServerProcess .* -p ${tika_port}${_host_re}")
+	if [ -n "${_match}" ]; then
+		echo "${_match}" | tr '\n' ' ' | sed 's/[[:space:]]*$//'
+	fi
+}
+
+tika_update_pidfile()
+{
+	local _pid
+
+	_pid=$(pgrep -f "java .*tika-server\\.jar .* -p ${tika_port}" | head -n 1)
+	if [ -n "${_pid}" ]; then
+		echo "${_pid}" > "${pidfile}"
+		chown "${tika_user}:${tika_group}" "${pidfile}" 2>/dev/null || true
+	fi
+}
+
+tika_prestart()
+{
+	local _existing _pid
+
+	if [ ! -d "${tika_pid_dir}" ]; then
+		install -d -o "${tika_user}" -g "${tika_group}" -m 0755 \
+		    "${tika_pid_dir}" || return 1
+	else
+		chown "${tika_user}:${tika_group}" "${tika_pid_dir}" || return 1
+	fi
+
+	if [ -f "${pidfile}" ]; then
+		read _pid _junk < "${pidfile}"
+		if [ -n "${_pid}" ] && ! kill -0 "${_pid}" 2>/dev/null; then
+			rm -f "${pidfile}" || return 1
+		fi
+	fi
+
+	_existing=$(tika_find_pids)
+	if [ -n "${_existing}" ]; then
+		echo "${name} already running? (pid=${_existing})." 1>&2
+		tika_update_pidfile
+		return 1
+	fi
+}
+
+tika_start()
+{
+	su -m "${tika_user}" -c "${command} start"
+}
+
+tika_stop()
+{
+	su -m "${tika_user}" -c "${command} stop"
+}
+
+tika_status()
+{
+	local _pids
+
+	_pids=$(tika_find_pids)
+	if [ -n "${_pids}" ]; then
+		echo "${name} is running as pid ${_pids}."
+		return 0
+	fi
+
+	echo "${name} is not running."
+	return 1
+}
+
+# add %%LOCALBASE%%/bin to path
+export PATH=$PATH:%%LOCALBASE%%/bin
+export TIKA_INCLUDE="${tika_config}"
+
+tika_load_settings
+
+required_files="${tika_config}"
+command="${tika_command}"
+pidfile="${tika_pid_dir}/tika-${tika_port}.pid"
+procname=java
+start_cmd=tika_start
+start_precmd=tika_prestart
+stop_cmd=tika_stop
+status_cmd=tika_status
+
+run_rc_command "$1"

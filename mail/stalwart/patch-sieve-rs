@@ -1,0 +1,77 @@
+--- crates/common/Cargo.toml.orig	2026-01-31 14:45:20.752979000 +0000
++++ crates/common/Cargo.toml	2026-01-31 14:45:20.756162000 +0000
+@@ -13,7 +13,7 @@
+ types = { path = "../types" }
+ jmap_proto = { path = "../jmap-proto" }
+ imap_proto = { path = "../imap-proto" }
+-sieve-rs = { version = "0.7", features = ["rkyv", "serde"] }
++sieve-rs = { version = "0.7.1", features = ["rkyv", "serde"] }
+ mail-parser = { version = "0.11", features = ["full_encoding"] } 
+ mail-builder = { version = "0.4" }
+ mail-auth = { version = "0.7.1" }
+--- crates/email/Cargo.toml.orig	2026-01-31 14:45:20.764256000 +0000
++++ crates/email/Cargo.toml	2026-01-31 14:45:20.766143000 +0000
+@@ -16,7 +16,7 @@
+ smtp-proto = { version = "0.2", features = ["rkyv"] }
+ mail-parser = { version = "0.11", features = ["full_encoding"] } 
+ mail-builder = { version = "0.4" }
+-sieve-rs = { version = "0.7", features = ["rkyv"] } 
++sieve-rs = { version = "0.7.1", features = ["rkyv"] } 
+ tokio = { version = "1.47", features = ["net", "macros"] }
+ serde = { version = "1.0", features = ["derive"]}
+ serde_json = "1.0"
+--- crates/smtp/Cargo.toml.orig	2026-01-31 14:45:20.775245000 +0000
++++ crates/smtp/Cargo.toml	2026-01-31 14:45:20.777570000 +0000
+@@ -25,7 +25,7 @@
+ mail-parser = { version = "0.11", features = ["full_encoding"] } 
+ mail-builder = { version = "0.4" } 
+ smtp-proto = { version = "0.2", features = ["rkyv", "serde"] }
+-sieve-rs = { version = "0.7", features = ["rkyv"] } 
++sieve-rs = { version = "0.7.1", features = ["rkyv"] } 
+ ahash = { version = "0.8" }
+ rustls = { version = "0.23.5", default-features = false, features = ["std", "ring", "tls12"] }
+ rustls-pemfile = "2.0"
+--- crates/jmap/Cargo.toml.orig	2026-01-31 14:45:20.785575000 +0000
++++ crates/jmap/Cargo.toml	2026-01-31 14:45:20.787797000 +0000
+@@ -24,7 +24,7 @@
+ mail-builder = { version = "0.4" }
+ mail-send = { version = "0.5", default-features = false, features = ["cram-md5", "ring", "tls12"] }
+ mail-auth = { version = "0.7.1", features = ["generate"] }
+-sieve-rs = { version = "0.7", features = ["rkyv"] } 
++sieve-rs = { version = "0.7.1", features = ["rkyv"] } 
+ jmap-tools = { version = "0.1", features = ["rkyv"] }
+ serde = { version = "1.0", features = ["derive"]}
+ serde_json = "1.0"
+--- crates/managesieve/Cargo.toml.orig	2026-01-31 14:45:20.792844000 +0000
++++ crates/managesieve/Cargo.toml	2026-01-31 14:45:20.794719000 +0000
+@@ -16,7 +16,7 @@
+ trc = { path = "../trc" }
+ mail-parser = { version = "0.11", features = ["full_encoding"] } 
+ mail-send = { version = "0.5", default-features = false, features = ["cram-md5", "ring", "tls12"] }
+-sieve-rs = { version = "0.7", features = ["rkyv"] } 
++sieve-rs = { version = "0.7.1", features = ["rkyv"] } 
+ rustls = { version = "0.23.5", default-features = false, features = ["std", "ring", "tls12"] }
+ rustls-pemfile = "2.0"
+ tokio = { version = "1.47", features = ["full"] }
+--- crates/migration/Cargo.toml.orig	2026-01-31 14:45:20.802035000 +0000
++++ crates/migration/Cargo.toml	2026-01-31 14:45:20.804530000 +0000
+@@ -19,7 +19,7 @@
+ mail-parser = { version = "0.11", features = ["full_encoding"] } 
+ mail-auth = { version = "0.7.1", features = ["rkyv"] }
+ smtp-proto = { version = "0.2", features = ["rkyv", "serde"] }
+-sieve-rs = { version = "0.7", features = ["rkyv"] } 
++sieve-rs = { version = "0.7.1", features = ["rkyv"] } 
+ calcard_latest = { package = "calcard", version = "0.3", features = ["rkyv"] }
+ calcard_v01 = { package = "calcard", version = "0.1", features = ["rkyv"] }
+ tokio = { version = "1.47", features = ["net", "macros"] }
+--- tests/Cargo.toml.orig	2026-01-31 14:45:20.819803000 +0000
++++ tests/Cargo.toml	2026-01-31 14:45:20.822840000 +0000
+@@ -46,7 +46,7 @@
+ mail-auth = { version = "0.7.1", features = ["test"] }
+ mail-parser = { version = "0.11", features = ["full_encoding", "rkyv"] } 
+ mail-builder = "0.4.4"
+-sieve-rs = { version = "0.7", features = ["rkyv"] } 
++sieve-rs = { version = "0.7.1", features = ["rkyv"] } 
+ utils = { path = "../crates/utils", features = ["test_mode"] }
+ jmap-client = { version = "0.4", features = ["websockets", "debug", "async"] } 
+ tokio = { version = "1.47", features = ["full"] }

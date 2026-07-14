@@ -1,0 +1,57 @@
+--- bin/solr.orig	2026-01-02 20:59:41.000000000 +0000
++++ bin/solr	2026-03-04 14:17:39.308798000 +0000
+@@ -160,7 +160,7 @@
+ export SOLR_PORT_LISTEN
+ 
+ # test that Java exists, is executable and correct version
+-JAVA_VER=$("$JAVA" -version 2>&1)
++JAVA_VER="$("$JAVA" -version 2>&1)"
+ # shellcheck disable=SC2181
+ if [[ $? -ne 0 ]] ; then
+   echo >&2 "Java not found, or an error was encountered when running java."
+@@ -175,10 +175,13 @@
+   echo >&2 "${PATH}"
+   exit 1
+ else
+-  JAVA_VER_NUM=$(echo "$JAVA_VER" | grep -v '_OPTIONS' | head -1 | awk -F '"' '/version/ {print $2}' | sed -e's/^1\.//' | sed -e's/[._-].*$//')
+-  if (( JAVA_VER_NUM < JAVA_VER_REQ )) ; then
++  BARE_JAVA_VER="$(echo "${JAVA_VER}" | awk '/version/ {print $3}' | cut -d '"' -f 2)"
++  MAJOR_JAVA_VER=$(echo "${BARE_JAVA_VER}" | cut -d. -f1)
++  #MINOR_JAVA_VER=$(echo "${BARE_JAVA_VER}" | cut -d. -f2)
++  POINT_JAVA_VER=$(echo "${BARE_JAVA_VER}" | cut -d. -f3)
++  if [[ "$MAJOR_JAVA_VER" -lt "$JAVA_VER_REQ" ]] ; then
+     echo >&2 "Your current version of Java is too old to run this version of Solr."
+-    echo >&2 "We found major version $JAVA_VER_NUM, using command '${JAVA} -version', with response:"
++    echo >&2 "We found major version $MAJOR_JAVA_VER, using command '${JAVA} -version', with response:"
+     echo >&2 "${JAVA_VER}"
+     echo >&2
+     echo >&2 "Please install latest version of Java $JAVA_VER_REQ or set JAVA_HOME properly."
+@@ -1352,13 +1355,12 @@
+     fi
+ 
+     # no lsof on cygwin though
+-    if lsof -v 2>&1 | grep -q revision; then
+       echo -n "Waiting up to $SOLR_START_WAIT seconds to see Solr running on port $SOLR_PORT_LISTEN"
+       # Launch in a subshell to show the spinner
+       (loops=0
+       while true
+       do
+-        running=$(lsof -t -PniTCP:$SOLR_PORT_LISTEN -sTCP:LISTEN || :)
++        running=$(sockstat -ls -P tcp -p $SOLR_PORT | grep LISTEN)
+         if [ -z "${running:-}" ]; then
+           slept=$((loops * 2))
+           if [ $slept -lt $SOLR_START_WAIT ]; then
+@@ -1376,13 +1378,6 @@
+         fi
+       done) &
+       spinner $!
+-    else
+-      echo -e "NOTE: Please install lsof as this script needs it to determine if Solr is listening on port $SOLR_PORT_LISTEN."
+-      sleep 10
+-      SOLR_PID=$(ps auxww | grep start\.jar | awk "/\-Dsolr\.port\.listen=$SOLR_PORT_LISTEN/"' {print $2}' | sort -r)
+-      echo -e "\nStarted Solr server on port $SOLR_PORT_LISTEN (pid=$SOLR_PID). Happy searching!\n"
+-      return;
+-    fi
+   fi
+ }
+ 

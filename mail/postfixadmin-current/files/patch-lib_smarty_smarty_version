@@ -1,0 +1,8 @@
+--- lib/smarty/smarty_version.orig	2024-03-22 10:00:06.374345000 +0200
++++ lib/smarty/smarty_version	2024-03-22 09:59:55.137061000 +0200
+@@ -0,0 +1,5 @@
++$Id$
++
++Smarty version: 4.5.2  (released: 2024/04/06)
++
++https://github.com/smarty-php/smarty/archive/refs/tags/v4.5.2.tar.gz
