@@ -33,7 +33,8 @@ WWW=		https://www.isc.org/bind/
 LICENSE=	MPL20
 LICENSE_FILE=	${WRKSRC}/COPYRIGHT
 
-LIB_DEPENDS=	liburcu.so:sysutils/liburcu \
+LIB_DEPENDS=	libnghttp2.so:www/libnghttp2 \
+		liburcu.so:sysutils/liburcu \
 		libuv.so:devel/libuv
 
 .if !defined(BIND_TOOLS_SLAVE)
@@ -55,7 +56,8 @@ USE_RC_SUBR=	named
 
 GNU_CONFIGURE=	yes
 GNU_CONFIGURE_MANPREFIX=	${PREFIX}/share
-CONFIGURE_ARGS=	--localstatedir=/var \
+CONFIGURE_ARGS=	--enable-dnsrps \
+		--localstatedir=/var \
 		--sysconfdir=${ETCDIR} \
 		--with-openssl=${OPENSSLBASE} \
 		--with-readline=libedit
@@ -81,8 +83,8 @@ EXTRA_PATCHES=		${PATCHDIR}/extrapatch-no-bind-tools
 PORTDOCS=	*
 .endif # BIND_TOOLS_SLAVE
 
-OPTIONS_DEFINE=		DNSTAP DNSRPS DOCS DOH FIXED_RRSET GEOIP IDN LARGE_FILE LMDB \
-			OVERRIDECACHE QUERYTRACE START_LATE TCP_FASTOPEN XML2 ZLIB
+OPTIONS_DEFINE=		DNSTAP DOCS FIXED_RRSET GEOIP IDN LARGE_FILE LMDB \
+			OVERRIDECACHE QUERYTRACE START_LATE TCP_FASTOPEN
 OPTIONS_DEFAULT=	DNSTAP ${${OSREL:R} < 15:?GSSAPI_NONE:GSSAPI_BASE} IDN \
 			LMDB STATS_JSON STATS_XML TCP_FASTOPEN
 
@@ -99,9 +101,7 @@ OPTIONS_EXCLUDE=	DOCS GEOIP LMDB OVERRIDECACHE QUERYTRACE START_LATE \
 
 OPTIONS_SUB=	yes
 
-DNSRPS_DESC=		Enable DNSRPS
 DNSTAP_DESC=		Provides fast passive logging of DNS messages
-DOH_DESC=		Enable DNS over HTTP (DoH)
 FIXED_RRSET_DESC=	Enable fixed rrset ordering
 GSSAPI_BASE_DESC=	Using ${${OSREL:R} < 15:?Heimdal in base (nsupdate is broken):MIT in base}
 GSSAPI_HEIMDAL_DESC=	Using security/heimdal (nsupdate is broken)
@@ -116,10 +116,6 @@ STATS_DESC=		Statistics channels
 STATS_JSON_DESC=	Enable JSON statistics channel
 STATS_XML_DESC=		Enable XML statistics channel
 TCP_FASTOPEN_DESC=	RFC 7413 support
-XML2_DESC=		Use libxml2
-ZLIB_DESC=		Use zlib compression
-
-DNSRPS_CONFIGURE_ENABLE=	dnsrps
 
 DNSTAP_LIB_DEPENDS=		libfstrm.so:devel/fstrm \
 				libprotobuf-c.so:devel/protobuf-c
@@ -129,9 +125,6 @@ DOCS_BUILD_DEPENDS=	${PYTHON_PKGNAMEPREFIX}sphinx_rtd_theme>0:textproc/py-sphinx
 			sphinx-build:textproc/py-sphinx
 DOCS_USES=		gmake python:env
 DOCS_ALL_TARGET=	all html
-
-DOH_CONFIGURE_ENABLE=	doh
-DOH_LIB_DEPENDS=	libnghttp2.so:www/libnghttp2
 
 FIXED_RRSET_CONFIGURE_ENABLE=	fixed-rrset
 
@@ -167,11 +160,6 @@ LMDB_CONFIGURE_WITH=	lmdb=${LOCALBASE}
 OVERRIDECACHE_EXTRA_PATCHES=	${FILESDIR}/extrapatch-bind-min-override-ttl
 
 QUERYTRACE_CONFIGURE_ENABLE=	querytrace
-
-XML2_CONFIGURE_WITH=	libxml2
-XML2_LIB_DEPENDS=	libxml2.so:textproc/libxml2
-
-ZLIB_CONFIGURE_WITH=	zlib
 
 START_LATE_SUB_LIST=		NAMED_BEFORE="LOGIN" \
 				NAMED_REQUIRE="SERVERS cleanvar"
