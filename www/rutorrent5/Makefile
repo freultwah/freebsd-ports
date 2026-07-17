@@ -279,6 +279,8 @@ post-stage:
 	# The web server needs write access only to runtime state under share/.
 	@${REINPLACE_CMD} -E \
 		-e "s|^www/${PORTNAME}/share/(.*)|@(${WWWOWN},${WWWGRP},) www/${PORTNAME}/share/\1|" \
+		-e "s|^@dir www/${PORTNAME}/share/settings$$|@dir(${WWWOWN},${WWWGRP},0750) www/${PORTNAME}/share/settings|" \
+		-e "s|^@dir www/${PORTNAME}/share/torrents$$|@dir(${WWWOWN},${WWWGRP},0770) www/${PORTNAME}/share/torrents|" \
 		-e "s|^@dir www/${PORTNAME}/share/(.*)|@dir(${WWWOWN},${WWWGRP},0750) www/${PORTNAME}/share/\1|" \
 		${TMPPLIST}
 	@${ECHO_CMD} "@dir(${WWWOWN},${WWWGRP},0750) www/${PORTNAME}/share" >> ${TMPPLIST}
