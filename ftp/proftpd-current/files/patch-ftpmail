@@ -34,9 +34,9 @@
 +pid = /var/run/ftpmail.pid
 +ignore_users = user1|user2|user3|user4|user5
 +watch_users =
---- /dev/null	2026-06-03 09:53:57.404076000 +0000
-+++ contrib/ftpmail.py	2026-06-03 09:52:32.164916000 +0000
-@@ -0,0 +1,712 @@
+--- /dev/null	2026-07-23 19:32:21.848313000 +0000
++++ contrib/ftpmail.py	2026-07-23 19:31:14.355482000 +0000
+@@ -0,0 +1,734 @@
 +#!/usr/bin/env python3
 +from __future__ import annotations
 +import argparse
@@ -578,7 +578,7 @@
 +        attachment_path=file_path if config.get('attach_file') else None
 +    )
 +
-+def monitor_fifo(config):
++def monitor_fifo(config, signal_state=None):
 +    # SMTP Server Configuration  
 +    smtp_host = config.get('smtp_server')
 +    smtp_port = config.get('smtp_port', 25)
@@ -635,15 +635,31 @@
 +
 +    xferlog_path = config.get('xferlog')
 +    xferlog_fh = None
-+    if xferlog_path:
++
++    def open_xferlog():
++        if not xferlog_path:
++            return None
 +        try:
-+            xferlog_fh = open(xferlog_path, 'a', buffering=1)
++            return open(xferlog_path, 'a', buffering=1)
 +        except Exception as e:
 +            logging.error(f"Unable to open xferlog file '{xferlog_path}': {e}")
-+            xferlog_fh = None
++            return None
++
++    xferlog_fh = open_xferlog()
 +
 +    while True:
 +        try:
++            if signal_state is not None and signal_state.get('reopen_logs'):
++                signal_state['reopen_logs'] = False
++                if xferlog_fh:
++                    try:
++                        xferlog_fh.close()
++                    except Exception as e:
++                        logging.error(f"Unable to close xferlog file '{xferlog_path}': {e}")
++                xferlog_fh = open_xferlog()
++                if xferlog_fh:
++                    logging.info(f"Reopened xferlog file '{xferlog_path}'")
++
 +            sleep_secs = float(config.get('sleep', 0.5))
 +            ready, _, _ = select.select([fifo], [], [], sleep_secs)
 +            if not ready:
@@ -731,6 +747,8 @@
 +    if pid_file:
 +        write_pid_file(pid_file)
 +
++    signal_state = {'reopen_logs': False}
++
 +    def handle_exit(signum, frame):
 +        if not (config.get('log_level', 'info') == 'info' and config.get('log_format', 'full') == 'sparse'):
 +            logging.info(f"Received signal {signum}. Exiting.")
@@ -738,11 +756,15 @@
 +            remove_pid_file(pid_file)
 +        sys.exit(0)
 +
++    def handle_hup(signum, frame):
++        signal_state['reopen_logs'] = True
++
 +    signal.signal(signal.SIGTERM, handle_exit)
 +    signal.signal(signal.SIGINT, handle_exit)
++    signal.signal(signal.SIGHUP, handle_hup)
 +
 +    try:
-+        monitor_fifo(config)
++        monitor_fifo(config, signal_state)
 +    finally:
 +        if pid_file:
 +            remove_pid_file(pid_file)

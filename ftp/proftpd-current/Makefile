@@ -4,7 +4,7 @@ PORTNAME?=	proftpd-current
 .if !defined(DISTVERSION)
 PORTVERSION?=	${PROFTPD_VERSION}
 .endif
-PORTREVISION?=	11
+PORTREVISION?=	12
 CATEGORIES?=	ftp
 
 .if defined(_BUILDING_PROFTPD_MODULE)
@@ -23,7 +23,7 @@ LICENSE_FILE?=	${WRKSRC}/COPYING
 USE_GITHUB=	yes
 GH_ACCOUNT=	proftpd
 GH_PROJECT=	proftpd
-GH_TAGNAME=	4ff73a4
+GH_TAGNAME=	7b0382c
 
 #GH_TUPLE=	jbenden:mod_clamav:f277f03:mod_clamav/vendor/github.com/jbenden/mod_clamav
 #GH_TUPLE=	freultwah:mod_clamav:e8f48c9:mod_clamav/vendor/github.com/freultwah/mod_clamav
@@ -38,7 +38,7 @@ BUILD_DEPENDS+=	${LOCALBASE}/sbin/proftpd:ftp/proftpd
 RUN_DEPENDS+=	${LOCALBASE}/sbin/proftpd:ftp/proftpd
 .endif
 
-PROFTPD_VERSION=	1.3.10.rc2
+PROFTPD_VERSION=	1.3.10.rc3
 
 CPE_VENDOR=	proftpd
 CPE_PRODUCT=	proftpd
