@@ -26,7 +26,7 @@
 +log = /var/log/ftpmail.log
 +xferlog = /var/log/proftpd/xferlog
 +log_level = info
-+log_format = sparse
++log_format = full
 +fifo = /var/log/proftpd/xferlog.fifo
 +sleep = 0.5
 +daemonize = false
@@ -34,9 +34,9 @@
 +pid = /var/run/ftpmail.pid
 +ignore_users = user1|user2|user3|user4|user5
 +watch_users =
---- /dev/null	2026-07-24 12:25:04.212423000 +0000
-+++ contrib/ftpmail.py	2026-07-24 12:24:28.852172000 +0000
-@@ -0,0 +1,707 @@
+--- /dev/null	2026-07-24 12:42:17.674688000 +0000
++++ contrib/ftpmail.py	2026-07-24 12:42:06.569309000 +0000
+@@ -0,0 +1,687 @@
 +#!/usr/bin/env python3
 +from __future__ import annotations
 +import argparse
@@ -371,19 +371,6 @@
 +    return format_mapping.get(config_log_format, '%(asctime)s %(levelname)s: %(message)s')
 +
 +
-+class SparseLogFilter(logging.Filter):
-+    """In sparse mode, only pass through actual TransferLog lines."""
-+
-+    def filter(self, record):
-+        # Allow all messages below INFO level (DEBUG, etc.)
-+        if record.levelno < logging.INFO:
-+            return True
-+        # Pass through only lines that parse as valid TransferLog entries.
-+        msg = record.getMessage()
-+        if parse_xferlog_line(msg) is not None:
-+            return True
-+        return False
-+
 +def setup_logging(log_path, log_level, log_format):
 +    try:
 +        formatter = logging.Formatter(get_log_format(log_format))
@@ -400,10 +387,6 @@
 +        for old_handler in logger.handlers[:]:
 +            logger.removeHandler(old_handler)
 +            old_handler.close()
-+
-+        # Add the custom filter if log_format is 'sparse'
-+        if log_format == 'sparse':
-+            handler.addFilter(SparseLogFilter())
 +
 +        logger.addHandler(handler)
 +    except Exception as e:
@@ -613,9 +596,7 @@
 +
 +    fifo = open_fifo()
 +
-+    # Conditionally log the "Monitoring FIFO" message based on log_format
-+    if config.get('log_format') != 'sparse' and config.get('log'):
-+        logging.info(f"Monitoring FIFO: {fifo_path}")
++    logging.info(f"Monitoring FIFO: {fifo_path}")
 +
 +    xferlog_path = config.get('xferlog')
 +    xferlog_fh = None
@@ -729,8 +710,7 @@
 +    signal_state = {'reopen_logs': False}
 +
 +    def handle_exit(signum, frame):
-+        if not (config.get('log_level', 'info') == 'info' and config.get('log_format', 'full') == 'sparse'):
-+            logging.info(f"Received signal {signum}. Exiting.")
++        logging.info(f"Received signal {signum}. Exiting.")
 +        sys.exit(0)
 +
 +    def handle_hup(signum, frame):
