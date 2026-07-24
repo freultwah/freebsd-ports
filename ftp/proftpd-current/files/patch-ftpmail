@@ -9,7 +9,7 @@
  	$(INSTALL) -o $(INSTALL_USER) -g $(INSTALL_GROUP) -m 0755 $(srcdir)/ftpquota $(DESTDIR)$(bindir)/ftpquota
 --- /dev/null	2026-05-11 11:52:10.354387000 +0300
 +++ contrib/ftpmail.conf.sample	2026-05-11 11:36:13.067503000 +0300
-@@ -0,0 +1,24 @@
+@@ -0,0 +1,23 @@
 +[DEFAULT]
 +from_name = FTP Server
 +from_addr = ftp@example.com
@@ -31,7 +31,6 @@
 +sleep = 0.5
 +daemonize = false
 +# auth = /usr/local/etc/ftpmail_smtp_auth.conf
-+pid = /var/run/ftpmail.pid
 +ignore_users = user1|user2|user3|user4|user5
 +watch_users =
 --- /dev/null	2026-07-24 12:42:17.674688000 +0000
