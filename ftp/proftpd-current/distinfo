@@ -1,5 +1,5 @@
-TIMESTAMP = 1784835336
-SHA256 (proftpd-proftpd-1.3.10.rc3-7b0382c_GH0.tar.gz) = cd9deb581d35ac2e6ef6caccefa97e9f02da61411301c58de064ddb3069b4b03
-SIZE (proftpd-proftpd-1.3.10.rc3-7b0382c_GH0.tar.gz) = 19911199
+TIMESTAMP = 1784896097
+SHA256 (proftpd-proftpd-1.3.10.rc3-4b2caa0_GH0.tar.gz) = 900d5c64abdf5049e6360c68315f1b9e30b2dd4824dbf09119b60c9e75af7e47
+SIZE (proftpd-proftpd-1.3.10.rc3-4b2caa0_GH0.tar.gz) = 19911314
 SHA256 (freultwah-mod_clamav-5dfeb6b_GH0.tar.gz) = c2d197e6bb4baf609b3c903b4381c99fa56a4551ee5c11a5b5af561b9a0c1cb0
 SIZE (freultwah-mod_clamav-5dfeb6b_GH0.tar.gz) = 22636

@@ -34,9 +34,9 @@
 +pid = /var/run/ftpmail.pid
 +ignore_users = user1|user2|user3|user4|user5
 +watch_users =
---- /dev/null	2026-07-23 19:32:21.848313000 +0000
-+++ contrib/ftpmail.py	2026-07-23 19:31:14.355482000 +0000
-@@ -0,0 +1,734 @@
+--- /dev/null	2026-07-24 12:25:04.212423000 +0000
++++ contrib/ftpmail.py	2026-07-24 12:24:28.852172000 +0000
+@@ -0,0 +1,707 @@
 +#!/usr/bin/env python3
 +from __future__ import annotations
 +import argparse
@@ -201,8 +201,7 @@
 +    parser.add_argument('--subject', type=str, help='Custom email subject.')
 +    parser.add_argument('--watch-users', type=str, help='Regex to watch specific users.')
 +    parser.add_argument('--auth', type=str, help='Path to SMTP authentication info file.')
-+    parser.add_argument('--pid', type=str, help='Path to PID file.')
-+    
++
 +    args = parser.parse_args()
 +
 +    # Override config with command-line arguments if provided
@@ -385,23 +384,6 @@
 +            return True
 +        return False
 +
-+def write_pid_file(pid_path):
-+    try:
-+        with open(pid_path, 'w') as f:
-+            f.write(str(os.getpid()))
-+        logging.debug(f"PID file written at {pid_path}")
-+    except Exception as e:
-+        logging.error(f"Failed to write PID file '{pid_path}': {e}")
-+        sys.exit(1)
-+
-+def remove_pid_file(pid_path):
-+    try:
-+        if os.path.exists(pid_path):
-+            os.remove(pid_path)
-+            logging.debug(f"PID file '{pid_path}' removed.")
-+    except Exception as e:
-+        logging.error(f"Failed to remove PID file '{pid_path}': {e}")
-+
 +def setup_logging(log_path, log_level, log_format):
 +    try:
 +        formatter = logging.Formatter(get_log_format(log_format))
@@ -413,9 +395,11 @@
 +        logger = logging.getLogger()
 +        logger.setLevel(log_level)
 +
-+        # Remove existing handlers to prevent duplicate logs
-+        if logger.hasHandlers():
-+            logger.handlers.clear()
++        # Close existing handlers as well as removing them.  This matters when
++        # SIGHUP requests that a rotated log file be reopened.
++        for old_handler in logger.handlers[:]:
++            logger.removeHandler(old_handler)
++            old_handler.close()
 +
 +        # Add the custom filter if log_format is 'sparse'
 +        if log_format == 'sparse':
@@ -651,12 +635,18 @@
 +        try:
 +            if signal_state is not None and signal_state.get('reopen_logs'):
 +                signal_state['reopen_logs'] = False
++                setup_logging(
++                    config.get('log'),
++                    get_log_level(config.get('log_level', 'info')),
++                    config.get('log_format', 'full')
++                )
 +                if xferlog_fh:
 +                    try:
 +                        xferlog_fh.close()
 +                    except Exception as e:
 +                        logging.error(f"Unable to close xferlog file '{xferlog_path}': {e}")
 +                xferlog_fh = open_xferlog()
++                logging.info("Reopened application log")
 +                if xferlog_fh:
 +                    logging.info(f"Reopened xferlog file '{xferlog_path}'")
 +
@@ -731,29 +721,16 @@
 +            print(f"Unable to open xferlog file '{xferlog_path}': {e}", file=sys.stderr)
 +            sys.exit(1)
 +
-+
-+    pid_file = config.get('pid', '/tmp/ftpmail.pid')
-+    pid_dir = os.path.dirname(pid_file) or '.'
-+    if not os.path.isdir(pid_dir) or not os.access(pid_dir, os.W_OK):
-+        print(f"PID directory '{pid_dir}' is not writable; configure --pid to a writable path.", file=sys.stderr)
-+        sys.exit(1)
-+
-+def run_service(config, manage_pid=False):
++def run_service(config):
 +    log_level = get_log_level(config.get('log_level', 'info'))
 +    log_format = config.get('log_format', 'full')
 +    setup_logging(config.get('log'), log_level, log_format)
-+
-+    pid_file = config.get('pid', '/tmp/ftpmail.pid') if manage_pid else None
-+    if pid_file:
-+        write_pid_file(pid_file)
 +
 +    signal_state = {'reopen_logs': False}
 +
 +    def handle_exit(signum, frame):
 +        if not (config.get('log_level', 'info') == 'info' and config.get('log_format', 'full') == 'sparse'):
 +            logging.info(f"Received signal {signum}. Exiting.")
-+        if pid_file:
-+            remove_pid_file(pid_file)
 +        sys.exit(0)
 +
 +    def handle_hup(signum, frame):
@@ -763,11 +740,7 @@
 +    signal.signal(signal.SIGINT, handle_exit)
 +    signal.signal(signal.SIGHUP, handle_hup)
 +
-+    try:
-+        monitor_fifo(config, signal_state)
-+    finally:
-+        if pid_file:
-+            remove_pid_file(pid_file)
++    monitor_fifo(config, signal_state)
 +
 +if __name__ == '__main__':
 +    main()
