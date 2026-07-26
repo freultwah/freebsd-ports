@@ -1,7 +1,7 @@
 # Created by: Gea-Suan Lin <gslin@gslin.org>
 
 PORTNAME=	apache-tika
-PORTVERSION=	3.3.1
+PORTVERSION=	3.3.2
 PORTREVISION=	0
 PORTEPOCH=	1
 CATEGORIES=	textproc java
