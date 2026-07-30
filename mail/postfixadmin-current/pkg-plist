@@ -2757,7 +2757,6 @@
 %%WWWDIR%%/public/totp.php
 %%WWWDIR%%/public/upgrade.php
 %%WWWDIR%%/public/users/app-passwords.php
-%%WWWDIR%%/public/users/edit-alias.php
 %%WWWDIR%%/public/users/index.php
 %%WWWDIR%%/public/users/login-mfa.php
 %%WWWDIR%%/public/users/login.php
@@ -2797,7 +2796,6 @@
 %%WWWDIR%%/templates/sendmail.tpl
 %%WWWDIR%%/templates/totp-exceptions.tpl
 %%WWWDIR%%/templates/totp.tpl
-%%WWWDIR%%/templates/users_edit-alias.tpl
 %%WWWDIR%%/templates/users_main.tpl
 %%WWWDIR%%/templates/users_menu.tpl
 %%WWWDIR%%/templates/vacation.tpl
