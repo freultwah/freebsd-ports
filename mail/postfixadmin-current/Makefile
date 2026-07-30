@@ -1,7 +1,7 @@
 # Created by: Rob Evers <rob@debank.tv>
 
 PORTNAME=	postfixadmin
-DISTVERSION=	g20260705
+DISTVERSION=	g20260728
 PORTREVISION=	0
 CATEGORIES=	mail www
 PKGNAMESUFFIX=	${PHP_PKGNAMESUFFIX}
@@ -22,7 +22,7 @@ USE_PHP=	mbstring openssl pcre session spl
 USE_GITHUB=	yes
 GH_ACCOUNT=	postfixadmin
 GH_PROJECT=	postfixadmin
-GH_TAGNAME=	0328f02
+GH_TAGNAME=	bf47bdd
 
 GH_TUPLE=	\
 		smarty-php:smarty:v4.5.6:smarty_php_smarty/lib/smarty \
