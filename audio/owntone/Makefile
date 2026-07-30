@@ -48,7 +48,7 @@ GID_FILES?=	/root/ports/LOCAL/GIDs ${PORTSDIR}/GIDs
 .endif
 
 CONFIGURE_ARGS=	--disable-install_systemd \
-		--host=x86_64-portbld-freebsd15.0 \
+		--host=$$(pkgconf --variable=host gpg-error) \
 		--with-owntone-user=${OWNTONE_USER} \
 		--with-owntone-group=${OWNTONE_USER}
 
