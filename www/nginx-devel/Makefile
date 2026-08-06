@@ -201,8 +201,6 @@ STREAM_SSL_PREREAD_CONFIGURE_ON=--with-stream_ssl_preread_module
 
 .include <bsd.port.pre.mk>
 
-MONGOC_VERSION!=	${MAKE} -C ${PORTSDIR}/devel/mongo-c-driver -V DISTVERSION
-
 .if ${PORT_OPTIONS:MDSO}
 _addbasemod=	=dynamic
 _addextmod=	add-dynamic-module
