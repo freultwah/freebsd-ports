@@ -1,7 +1,7 @@
 PORTNAME=	nginx
 PORTVERSION=	${NGINX_VERSION}
 .include "version.mk"
-PORTREVISION=	1
+PORTREVISION=	2
 PORTEPOCH=	3
 CATEGORIES=	www
 MASTER_SITES=	https://nginx.org/download/ \
@@ -195,8 +195,6 @@ STREAM_SSL_PREREAD_CONFIGURE_ON=--with-stream_ssl_preread_module
 
 .include <bsd.port.pre.mk>
 
-MONGOC_VERSION!=       ${MAKE} -C ${PORTSDIR}/devel/mongo-c-driver -V DISTVERSION
-
 .if ${PORT_OPTIONS:MDSO}
 _addbasemod=	=dynamic
 _addextmod=	add-dynamic-module
@@ -284,11 +282,6 @@ post-patch-FASTDFS-on:
 	@${REINPLACE_CMD} \
 		's!%%PREFIX%%!${PREFIX}!g;s!%%LOCALBASE%%!${LOCALBASE}!g' \
 		${WRKSRC_fastdfs}/src/config
-
-post-patch-GRIDFS-on:
-	@${REINPLACE_CMD} -e 's!%%LOCALBASE%%!${LOCALBASE}!g' \
-		-e 's!%%MONGOC_VERSION%%!${MONGOC_VERSION}!g' \
-		${WRKSRC_gridfs}/nginx-gridfs/config
 
 post-patch-HTTP_AUTH_KRB5-on:
 	@${REINPLACE_CMD} 's!%%GSSAPILIBS%%!${GSSAPILIBS}!g; \
