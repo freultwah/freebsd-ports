@@ -1,5 +1,5 @@
---- cargo-crates/v8-149.2.0/build.rs.orig	2006-07-24 01:21:28 UTC
-+++ cargo-crates/v8-149.2.0/build.rs
+--- cargo-crates/v8-150.4.0/build.rs.orig	2006-07-24 01:21:28 UTC
++++ cargo-crates/v8-150.4.0/build.rs
 @@ -255,7 +255,7 @@ fn build_v8(is_asan: bool) {
      download_ninja_gn_binaries();
    }

@@ -1,5 +1,5 @@
---- cargo-crates/v8-149.2.0/build/config/compiler/BUILD.gn.orig	2006-07-24 01:21:28 UTC
-+++ cargo-crates/v8-149.2.0/build/config/compiler/BUILD.gn
+--- cargo-crates/v8-150.4.0/build/config/compiler/BUILD.gn.orig	2006-07-24 01:21:28 UTC
++++ cargo-crates/v8-150.4.0/build/config/compiler/BUILD.gn
 @@ -203,7 +203,7 @@ declare_args() {
    # This greatly reduces the size of debug builds, at the cost of
    # debugging information which is required by some specialized
@@ -65,51 +65,6 @@
          ldflags += [ "-Wl,--fatal-warnings" ]
        }
      }
-@@ -1349,7 +1356,7 @@ config("compiler_cpu_abi") {
-     # CPU architecture. We may or may not be doing a cross compile now, so for
-     # simplicity we always explicitly set the architecture.
-     if (current_cpu == "x64") {
--      if (is_clang && !is_android && !is_fuchsia && !is_chromeos_device) {
-+      if (is_clang && !is_android && !is_fuchsia && !is_chromeos_device && !is_bsd) {
-         cflags += [ "--target=x86_64-unknown-linux-gnu" ]
-         ldflags += [ "--target=x86_64-unknown-linux-gnu" ]
-       } else {
-@@ -1363,7 +1370,7 @@ config("compiler_cpu_abi") {
-         ldflags += [ "-march=$cros_target_cpu_arch" ]
-       }
-     } else if (current_cpu == "x86") {
--      if (is_clang && !is_android && !is_chromeos_device) {
-+      if (is_clang && !is_android && !is_chromeos_device && !is_bsd) {
-         cflags += [ "--target=i386-unknown-linux-gnu" ]
-         ldflags += [ "--target=i386-unknown-linux-gnu" ]
-       } else {
-@@ -1375,7 +1382,7 @@ config("compiler_cpu_abi") {
-         "-msse3",
-       ]
-     } else if (current_cpu == "arm") {
--      if (is_clang && !is_android && !is_chromeos_device) {
-+      if (is_clang && !is_android && !is_chromeos_device && !is_bsd) {
-         cflags += [ "--target=arm-linux-gnueabihf" ]
-         ldflags += [ "--target=arm-linux-gnueabihf" ]
-       }
-@@ -1384,7 +1391,7 @@ config("compiler_cpu_abi") {
-         "-mfloat-abi=$arm_float_abi",
-       ]
-     } else if (current_cpu == "arm64") {
--      if (is_clang && !is_android && !is_fuchsia && !is_chromeos_device) {
-+      if (is_clang && !is_bsd && !is_android && !is_fuchsia && !is_chromeos_device) {
-         cflags += [ "--target=aarch64-linux-gnu" ]
-         ldflags += [ "--target=aarch64-linux-gnu" ]
-       }
-@@ -1634,7 +1641,7 @@ config("compiler_cpu_abi") {
-           cflags += [ "-maix64" ]
-           ldflags += [ "-maix64" ]
-         }
--      } else if (is_clang) {
-+      } else if (is_clang && !is_bsd) {
-         cflags += [ "--target=powerpc64le-unknown-linux-gnu" ]
-         ldflags += [ "--target=powerpc64le-unknown-linux-gnu" ]
-       } else {
 @@ -1744,7 +1751,7 @@ config("compiler_deterministic") {
        "-file-prefix-map",
        rebase_path("//.", "") + "=" + rebase_path("//.", root_build_dir),
@@ -128,7 +83,7 @@
      _perform_consistency_checks = current_toolchain == default_toolchain
      if (llvm_force_head_revision) {
        _head_revision_stamp_path = "//third_party/llvm-build/force_head_revision"
-@@ -2629,7 +2636,7 @@ config("thin_archive") {
+@@ -2303,7 +2310,7 @@ config("thin_archive") {
  # 2. Remove the thin_archive config, so that the .a file actually contains all
  #    .o files, instead of just references to .o files in the build directoy
  config("thin_archive") {
@@ -137,7 +92,7 @@
        current_os == "zos") {
      # The macOS and iOS linker ld64.ldd doesn't support thin archive without
      # symbol table, gcc on linux also throws the error `archive has no index`.
-@@ -3066,7 +3073,7 @@ config("afdo") {
+@@ -2747,7 +2754,7 @@ config("afdo") {
  # There are some targeted places that AFDO regresses, so we provide a separate
  # config to allow AFDO to be disabled per-target.
  config("afdo") {
@@ -146,7 +101,7 @@
      cflags = []
      if (clang_emit_debug_info_for_profiling) {
        # Add the following flags to generate debug info for profiling.
-@@ -3093,7 +3100,7 @@ config("afdo") {
+@@ -2771,7 +2778,7 @@ config("afdo") {
        cflags += [ "-Wno-backend-plugin" ]
        inputs = [ _clang_sample_profile ]
      }
@@ -155,7 +110,7 @@
      cflags = [ "-fauto-profile=${auto_profile_path}" ]
      inputs = [ auto_profile_path ]
    }
-@@ -3223,7 +3230,7 @@ config("symbols") {
+@@ -2908,7 +2915,7 @@ config("symbols") {
      }
  
      if (current_os != "zos") {
@@ -164,7 +119,7 @@
      }
  
      if (is_clang && !is_tsan && !is_asan) {
-@@ -3286,7 +3293,7 @@ config("symbols") {
+@@ -2972,7 +2979,7 @@ config("symbols") {
      cflags += [ "-gomit-unreferenced-methods" ]
    }
  

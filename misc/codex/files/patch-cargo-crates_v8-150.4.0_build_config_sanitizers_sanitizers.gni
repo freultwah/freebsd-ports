@@ -1,5 +1,5 @@
---- cargo-crates/v8-149.2.0/build/config/sanitizers/sanitizers.gni.orig	2026-06-10 07:20:15 UTC
-+++ cargo-crates/v8-149.2.0/build/config/sanitizers/sanitizers.gni
+--- cargo-crates/v8-150.4.0/build/config/sanitizers/sanitizers.gni.orig	2026-06-10 07:20:15 UTC
++++ cargo-crates/v8-150.4.0/build/config/sanitizers/sanitizers.gni
 @@ -530,7 +530,7 @@ template("ubsan_hardening") {
        _condition = invoker.condition
      }
