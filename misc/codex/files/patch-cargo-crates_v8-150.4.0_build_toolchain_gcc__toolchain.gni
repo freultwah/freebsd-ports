@@ -10,6 +10,9 @@
 +  extra_cxxflags = ""
 +  extra_ldflags = ""
 +}
+ # This template defines a toolchain for something that works like gcc
+ # (including clang).
+ #
 @@ -410,5 +416,3 @@ template("gcc_toolchain") {
        } else {
          command = "rm -f {{output}} && $command"
