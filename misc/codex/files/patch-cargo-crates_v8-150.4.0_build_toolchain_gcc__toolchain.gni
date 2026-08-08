@@ -10,16 +10,13 @@
 +  extra_cxxflags = ""
 +  extra_ldflags = ""
 +}
-@@ -413,8 +419,6 @@ template("gcc_toolchain") {
+@@ -410,5 +416,3 @@ template("gcc_toolchain") {
        } else {
          command = "rm -f {{output}} && $command"
 -        inputs =
 -            [ get_path_info(rebase_path(ar, ".", root_out_dir), "abspath") ]
        }
 
- # This template defines a toolchain for something that works like gcc
- # (including clang).
- #
 @@ -956,22 +962,13 @@ template("clang_toolchain") {
  # actually just be doing a native compile.
  template("clang_toolchain") {
