@@ -50,7 +50,8 @@ SHEBANG_FILES=	codex-rs/skills/src/assets/samples/imagegen/scripts/image_gen.py 
 CARGO_CARGOTOML=	${BUILD_WRKSRC}/Cargo.toml
 CARGO_CARGOLOCK=	${BUILD_WRKSRC}/Cargo.lock
 CARGO_BUILD_ARGS=	--bin ${PORTNAME} \
-			--bin ${PORTNAME}-responses-api-proxy
+			--bin ${PORTNAME}-responses-api-proxy \
+			--bin ${PORTNAME}-code-mode-host
 CARGO_TEST_ARGS=	--all-features --no-fail-fast
 CARGO_ENV=		OPENSSL_NO_VENDOR=1 \
 			V8_FROM_SOURCE=1 \
@@ -63,7 +64,9 @@ BINARY_ALIAS=	python3=${PYTHON_CMD}
 BUILD_WRKSRC=	${WRKSRC}/codex-rs
 
 PLIST_FILES=	bin/${PORTNAME} \
-		bin/${PORTNAME}-responses-api-proxy
+		bin/${PORTNAME}-responses-api-proxy \
+		bin/${PORTNAME}-code-mode-host
+
 PORTDOCS=	README.md config.md
 
 OPTIONS_DEFINE=		COMPLETIONS DOCS
@@ -174,7 +177,7 @@ post-build-COMPLETIONS-on:
 .endfor
 
 do-install:
-.for prog in ${PORTNAME} ${PORTNAME}-responses-api-proxy
+.for prog in ${PORTNAME} ${PORTNAME}-responses-api-proxy ${PORTNAME}-code-mode-host
 	${INSTALL_PROGRAM} ${CARGO_TARGET_DIR}/*/${prog} \
 		${STAGEDIR}${PREFIX}/bin
 .endfor
