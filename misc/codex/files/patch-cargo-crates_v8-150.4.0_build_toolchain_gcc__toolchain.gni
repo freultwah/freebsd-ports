@@ -19,7 +19,6 @@
 -        inputs =
 -            [ get_path_info(rebase_path(ar, ".", root_out_dir), "abspath") ]
        }
-
 @@ -956,22 +962,13 @@ template("clang_toolchain") {
  # actually just be doing a native compile.
  template("clang_toolchain") {
