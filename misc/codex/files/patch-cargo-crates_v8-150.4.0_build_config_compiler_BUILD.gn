@@ -110,6 +110,15 @@
      cflags = [ "-fauto-profile=${auto_profile_path}" ]
      inputs = [ auto_profile_path ]
    }
+@@ -2827,7 +2827,7 @@ config("split_dwarf") {
+   # thinlto requires -gsplit-dwarf in ldflags.
+   if (use_thin_lto && !is_apple) {
+     ldflags = split_dwarf_flags
+-  } else {
++  } else if (!is_bsd) {
+     # .dwo files are generated when ThinLTO is not used.
+     c_additional_outputs =
+         [ "{{target_out_dir}}/{{label_name}}/{{source_name_part}}.dwo" ]
 @@ -2908,7 +2915,7 @@ config("symbols") {
      }
  
