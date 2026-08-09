@@ -1,0 +1,11 @@
+--- cargo-crates/v8-150.4.0/third_party/partition_alloc/src/partition_alloc/BUILD.gn.orig	2026-06-10 02:22:19 UTC
++++ cargo-crates/v8-150.4.0/third_party/partition_alloc/src/partition_alloc/BUILD.gn
+@@ -760,7 +760,7 @@ component("partition_alloc_base") {
+         "partition_alloc_base/time/time_conversion_posix.cc",
+       ]
+ 
+-      if (is_linux || is_chromeos) {
++      if (is_linux || is_chromeos || is_freebsd) {
+         sources += [ "partition_alloc_base/debug/stack_trace_linux.cc" ]
+       }
+ 
