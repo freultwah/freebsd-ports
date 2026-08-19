@@ -16,7 +16,8 @@ BROKEN_i386=	fails to build: rustc-LLVM ERROR: out of memory
 MAKE_JOBS_NUMBER_LIMIT=	6
 
 BUILD_DEPENDS=	gn:devel/gn \
-		icu>0:devel/icu
+		icu>0:devel/icu \
+		protoc:devel/protobuf
 LIB_DEPENDS=	libzstd.so:archivers/zstd \
 		libasound.so:audio/alsa-lib \
 		libdbus-1.so:devel/dbus \
@@ -90,6 +91,9 @@ post-configure:
 .endfor
 
 post-patch:
+	@${REINPLACE_CMD} -e \
+		's|protoc_bin_vendored::protoc_bin_path()?|"${LOCALBASE}/bin/protoc"|' \
+		${BUILD_WRKSRC}/code-mode-protocol/build.rs
 	@${REINPLACE_CMD} -e 's|/bin/bash|${LOCALBASE}&|' \
 		${BUILD_WRKSRC}/cli/src/debug_sandbox/pid_tracker.rs \
 		${BUILD_WRKSRC}/core/src/command_canonicalization.rs \
