@@ -1,6 +1,6 @@
 PORTNAME=	codex
 DISTVERSIONPREFIX=	rust-v
-DISTVERSION=	0.147.0
+DISTVERSION=	0.148.0
 CATEGORIES=	misc devel
 
 MAINTAINER=	tagattie@FreeBSD.org
@@ -130,7 +130,6 @@ post-patch:
 		${BUILD_WRKSRC}/config/src/hooks_tests.rs \
 		${BUILD_WRKSRC}/core-plugins/src/script_attribution.rs \
 		${BUILD_WRKSRC}/core-plugins/src/script_attribution_tests.rs \
-		${BUILD_WRKSRC}/core-skills/src/invocation_utils.rs \
 		${BUILD_WRKSRC}/skills/src/invocation_tests.rs \
 		${BUILD_WRKSRC}/core/src/command_canonicalization_tests.rs \
 		${BUILD_WRKSRC}/core/src/config/config_loader_tests.rs \
