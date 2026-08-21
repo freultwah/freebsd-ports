@@ -1,6 +1,6 @@
 PORTNAME=	codex
 DISTVERSIONPREFIX=	rust-v
-DISTVERSION=	0.148.0
+DISTVERSION=	0.149.0
 CATEGORIES=	misc devel
 
 MAINTAINER=	tagattie@FreeBSD.org
@@ -164,7 +164,6 @@ post-patch:
 		${BUILD_WRKSRC}/linux-sandbox/tests/suite/landlock.rs \
 		${BUILD_WRKSRC}/linux-sandbox/tests/suite/managed_proxy.rs \
 		${BUILD_WRKSRC}/shell-command/src/bash.rs \
-		${BUILD_WRKSRC}/shell-command/src/command_safety/is_safe_command.rs \
 		${BUILD_WRKSRC}/tui/src/app/tests.rs \
 		${BUILD_WRKSRC}/tui/src/chatwidget/tests/app_server.rs \
 		${BUILD_WRKSRC}/tui/src/chatwidget/tests/approval_requests.rs \
