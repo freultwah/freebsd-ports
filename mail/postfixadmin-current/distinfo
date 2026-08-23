@@ -1,7 +1,7 @@
-TIMESTAMP = 1787486375
+TIMESTAMP = 1787487168
 SHA256 (postfixadmin-postfixadmin-g20260822-235cf06_GH0.tar.gz) = b55ff461d6f9efdff028a31a73e21a1f4c0be7a69298dce3766d36f12cab0388
 SIZE (postfixadmin-postfixadmin-g20260822-235cf06_GH0.tar.gz) = 4557045
-SHA256 (smarty-php-smarty-v4.5.6_GH0.tar.gz) = f617b86983b3c7115222c44d63d874630f9d4b4bd88cf1ef603b3ab138c67079
-SIZE (smarty-php-smarty-v4.5.6_GH0.tar.gz) = 364180
+SHA256 (smarty-php-smarty-v5.8.4_GH0.tar.gz) = 8ce827057f43b4356a15cea81dcd58d39acdad69490deabf9ef120c5dd17397d
+SIZE (smarty-php-smarty-v5.8.4_GH0.tar.gz) = 344737
 SHA256 (postfixadmin-pacrypt-0.0.2_GH0.tar.gz) = 062867f4a31d0b46ee9966d9845d902f0336a3671e4cd1d7d04faf854ab6aed6
 SIZE (postfixadmin-pacrypt-0.0.2_GH0.tar.gz) = 13820

@@ -25,7 +25,7 @@ GH_PROJECT=	postfixadmin
 GH_TAGNAME=	235cf06
 
 GH_TUPLE=	\
-		smarty-php:smarty:v4.5.6:smarty_php_smarty/lib/smarty \
+		smarty-php:smarty:v5.8.4:smarty_php_smarty/lib/smarty \
 		postfixadmin:pacrypt:0.0.2:postfixadmin_pacrypt/lib/pacrypt
 
 WRKSRC=		${WRKDIR}/${GH_PROJECT}-${GH_TAGNAME}
@@ -67,8 +67,7 @@ do-install:
 	(cd ${WRKSRC}/${i} && ${COPYTREE_SHARE} . ${STAGEDIR}${WWWDIR}/${i})
 .endfor
 	${MKDIR} ${STAGEDIR}${DATADIR}
-	(cd ${WRKSRC}/ADDITIONS && ${COPYTREE_SHARE} . ${STAGEDIR}${DATADIR}/ADDITIONS)
-.for i in GPL-LICENSE.TXT LICENSE.TXT password_expiration.sql
+.for i in GPL-LICENSE.TXT LICENSE.TXT
 	${INSTALL_DATA} ${WRKSRC}/${i} ${STAGEDIR}${DATADIR}
 .endfor
 
