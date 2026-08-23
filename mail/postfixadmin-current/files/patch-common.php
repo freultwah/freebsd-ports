@@ -12,7 +12,7 @@
  /**
   * Postfix Admin
   *
-@@ -65,6 +59,44 @@
+@@ -65,6 +59,45 @@
  
  $incpath = dirname(__FILE__);
  
@@ -53,11 +53,12 @@
 +}
 +
 +spl_autoload_register('postfixadmin_autoload');
++require_once(__DIR__ . '/lib/smarty/src/functions.php');
 +
  if (!is_file("$incpath/config.inc.php")) {
      die("config.inc.php is missing!");
  }
-@@ -107,6 +139,9 @@
+@@ -107,6 +140,9 @@
      if (!isset($PALANG)) {
          die("environment not setup correctly");
      }
