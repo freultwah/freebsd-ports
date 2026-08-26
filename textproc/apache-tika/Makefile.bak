@@ -1,14 +1,12 @@
 # Created by: Gea-Suan Lin <gslin@gslin.org>
 
 PORTNAME=	apache-tika
-PORTVERSION=	4.0.0
+PORTVERSION=	3.3.2
 PORTREVISION=	0
 PORTEPOCH=	1
 CATEGORIES=	textproc java
 MASTER_SITES=	https://archive.apache.org/dist/tika/${PORTVERSION}/
-DISTNAME=	tika-server-standard-${PORTVERSION}
-NO_WRKSUBDIR=	yes
-WRKSRC=		${WRKDIR}/${DISTNAME}
+DISTNAME=	tika-server-standard-${PORTVERSION}-bin
 
 MAINTAINER=	mfechner@FreeBSD.org
 COMMENT=	Content analysis toolkit
@@ -33,7 +31,8 @@ MAKE_ENV+=	JAVA=${JAVA}
 MAKE_ENV+=	JAVAC=${JAVAC}
 MAKE_ENV+=	JAR=${JAR}
 
-USES=		cpe zip
+#USES=		cpe java tar:tgz
+USES=		cpe tar:tgz
 CPE_VENDOR=	apache
 CPE_PRODUCT=	tika
 JAVA_VERSION=	21+
