@@ -66,14 +66,6 @@ GH_ACCOUNT=	freebsd
 USE_XORG=       x11 xext xi xrandr xrender xt xtst
 .endif
 
-.if ${FLAVOR:M*headless}
-BUILD_DEPENDS+=       ${LOCALBASE}/include/X11/extensions/Xrender.h:x11/libXrender
-BUILD_DEPENDS+=       ${LOCALBASE}/include/X11/extensions/Xrandr.h:x11/libXrandr
-BUILD_DEPENDS+=       ${LOCALBASE}/include/X11/extensions/XTest.h:x11/libXtst
-BUILD_DEPENDS+=       ${LOCALBASE}/include/X11/extensions/shape.h:x11/libXext
-BUILD_DEPENDS+=       ${LOCALBASE}/include/X11/Intrinsic.h:x11-toolkits/libXt
-.endif
-
 GNU_CONFIGURE=		yes
 CONFIGURE_ARGS=		--disable-ccache \
 			--disable-javac-server \
