@@ -29,7 +29,7 @@
    // a new mode (turbo mode). Essentially, those frequencies cannot
    // always be relied upon. The same reasons apply to /proc/cpuinfo as
    // well.
-+#if !defined(__OpenBSD__) && !defined(__FreeBSD__)
++#if !defined(__OpenBSD__) && !defined(__FreeBSD__) // pledge violation
    if (ReadLongFromFile("/sys/devices/system/cpu/cpu0/tsc_freq_khz", &freq)) {
      return freq * 1e3;  // Value is kHz.
    }
@@ -41,7 +41,7 @@
    // If CPU scaling is in effect, we want to use the *maximum*
    // frequency, not whatever CPU speed some random processor happens
    // to be using now.
-+#if !defined(__OpenBSD__) && !defined(__FreeBSD__)
++#if !defined(__OpenBSD__) && !defined(__FreeBSD__) // pledge violation
    if (ReadLongFromFile("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq",
                         &freq)) {
      return freq * 1e3;  // Value is kHz.

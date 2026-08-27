@@ -1,16 +1,6 @@
---- cargo-crates/v8-150.4.0/.gn.orig	2006-07-24 01:21:28 UTC
+--- cargo-crates/v8-150.4.0/.gn.orig	2026-08-22 12:02:45 UTC
 +++ cargo-crates/v8-150.4.0/.gn
-@@ -78,16 +78,16 @@ default_args = {
- 
-   use_relative_vtables_abi = false
- 
--  v8_depend_on_icu_data_file = false
--  icu_copy_icudata_to_root_build_dir = false
--  icu_use_data_file = false
-+  v8_depend_on_icu_data_file = true
-+  icu_copy_icudata_to_root_build_dir = true
-+  icu_use_data_file = true
- 
+@@ -85,9 +85,9 @@ default_args = {
    # TODO: third_party/compiler-rt missing?
    use_llvm_libatomic = false
  

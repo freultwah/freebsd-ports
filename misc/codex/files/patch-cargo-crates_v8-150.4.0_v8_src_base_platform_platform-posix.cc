@@ -1,14 +1,5 @@
 --- cargo-crates/v8-150.4.0/v8/src/base/platform/platform-posix.cc.orig	2006-07-24 01:21:28 UTC
 +++ cargo-crates/v8-150.4.0/v8/src/base/platform/platform-posix.cc
-@@ -60,7 +60,7 @@
- #include <malloc/malloc.h>
- #elif V8_OS_OPENBSD
- #include <sys/malloc.h>
--#elif !V8_OS_ZOS
-+#elif !V8_OS_BSD
- #include <malloc.h>
- #endif
- 
 @@ -78,7 +78,7 @@
  #include <sys/syscall.h>
  #endif
@@ -51,7 +42,7 @@
    return true;
  #else
    // TODO(bbudge) Return true for all POSIX platforms.
-@@ -1422,7 +1430,7 @@ void Thread::SetThreadLocal(LocalStorageKey key, void*
+@@ -1423,7 +1431,7 @@ void Thread::SetThreadLocal(LocalStorageKey key, void*
  // keep this version in POSIX as most Linux-compatible derivatives will
  // support it. MacOS and FreeBSD are different here.
  #if !defined(V8_OS_FREEBSD) && !defined(V8_OS_DARWIN) && !defined(_AIX) && \

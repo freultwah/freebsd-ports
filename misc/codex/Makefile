@@ -1,6 +1,6 @@
 PORTNAME=	codex
 DISTVERSIONPREFIX=	rust-v
-DISTVERSION=	0.149.1
+DISTVERSION=	0.150.1
 CATEGORIES=	misc devel
 
 MAINTAINER=	tagattie@FreeBSD.org
@@ -13,10 +13,7 @@ LICENSE_FILE=	${WRKSRC}/LICENSE
 
 BROKEN_i386=	fails to build: rustc-LLVM ERROR: out of memory
 
-MAKE_JOBS_NUMBER_LIMIT=	4
-
 BUILD_DEPENDS=	gn:devel/gn \
-		icu>0:devel/icu \
 		protoc:devel/protobuf
 LIB_DEPENDS=	libzstd.so:archivers/zstd \
 		libasound.so:audio/alsa-lib \
@@ -34,9 +31,11 @@ GH_ACCOUNT=	openai
 
 USE_GNOME=	glib20
 
-SHEBANG_FILES=	codex-rs/skills/src/assets/samples/imagegen/scripts/image_gen.py \
+SHEBANG_FILES=	codex-rs/app-server-protocol/scripts/write_schema_fixtures.py \
+		codex-rs/skills/src/assets/samples/imagegen/scripts/image_gen.py \
 		codex-rs/skills/src/assets/samples/imagegen/scripts/remove_chroma_key.py \
 		codex-rs/skills/src/assets/samples/plugin-creator/scripts/create_basic_plugin.py \
+		codex-rs/skills/src/assets/samples/plugin-creator/scripts/identifier_validation.py \
 		codex-rs/skills/src/assets/samples/plugin-creator/scripts/read_marketplace_name.py \
 		codex-rs/skills/src/assets/samples/plugin-creator/scripts/update_plugin_cachebuster.py \
 		codex-rs/skills/src/assets/samples/plugin-creator/scripts/validate_plugin.py \
@@ -46,15 +45,21 @@ SHEBANG_FILES=	codex-rs/skills/src/assets/samples/imagegen/scripts/image_gen.py 
 		codex-rs/skills/src/assets/samples/skill-installer/scripts/github_utils.py \
 		codex-rs/skills/src/assets/samples/skill-installer/scripts/install-skill-from-github.py \
 		codex-rs/skills/src/assets/samples/skill-installer/scripts/list-skills.py \
+		codex-rs/skills/tests/test_plugin_creator.py \
+		codex-rs/skills/tests/test_skill_installer.py \
 		codex-rs/vendor/bubblewrap/demos/userns-block-fd.py \
 		codex-rs/vendor/bubblewrap/tests/test-seccomp.py \
-		codex-rs/vendor/bubblewrap/tests/use-as-subproject/assert-correct-rpath.py
+		codex-rs/vendor/bubblewrap/tests/use-as-subproject/assert-correct-rpath.py \
+		codex-rs/windows-sandbox-rs/sandbox_smoketests.py
 
 CARGO_CARGOTOML=	${BUILD_WRKSRC}/Cargo.toml
 CARGO_CARGOLOCK=	${BUILD_WRKSRC}/Cargo.lock
 CARGO_BUILD_ARGS=	--bin ${PORTNAME} \
-			--bin ${PORTNAME}-responses-api-proxy \
-			--bin ${PORTNAME}-code-mode-host
+			--bin ${PORTNAME}-code-mode-host \
+			--bin ${PORTNAME}-responses-api-proxy
+CARGO_INSTALL_PATH=	codex-rs/cli \
+			codex-rs/code-mode-host \
+			codex-rs/responses-api-proxy
 CARGO_TEST_ARGS=	--all-features --no-fail-fast
 CARGO_ENV=		OPENSSL_NO_VENDOR=1 \
 			V8_FROM_SOURCE=1 \
@@ -67,9 +72,9 @@ BINARY_ALIAS=	python3=${PYTHON_CMD}
 BUILD_WRKSRC=	${WRKSRC}/codex-rs
 
 PLIST_FILES=	bin/${PORTNAME} \
+		bin/${PORTNAME}-code-mode-host \
 		bin/${PORTNAME}-responses-api-proxy \
-		bin/${PORTNAME}-code-mode-host
-
+		bin/logs_client
 PORTDOCS=	README.md config.md
 
 OPTIONS_DEFINE=		COMPLETIONS DOCS
@@ -81,20 +86,14 @@ COMPLETIONS_PLIST_FILES=etc/bash_completion.d/${PORTNAME} \
 			share/fish/completions/${PORTNAME}.fish \
 			share/zsh/site-functions/_${PORTNAME}
 
-post-configure:
+post-extract:
 	@${MKDIR} ${WRKSRC_crate_v8}/third_party/icu/common
-.for suffix in l b
-	@if [ -r ${LOCALBASE}/share/icu/*/icudt*${suffix}.dat ]; then \
-		${CP} ${LOCALBASE}/share/icu/*/icudt*${suffix}.dat \
-			${WRKSRC_crate_v8}/third_party/icu/common/icudt${suffix}.dat; \
-	fi
-.endfor
+	@${CP} ${WRKSRC_crate_deno_core_icudata}/src/icudtl.dat \
+		${WRKSRC_crate_v8}/third_party/icu/common
 
 post-patch:
-	@${REINPLACE_CMD} -e \
-		's|protoc_bin_vendored::protoc_bin_path()?|"${LOCALBASE}/bin/protoc"|' \
-		${BUILD_WRKSRC}/code-mode-protocol/build.rs
 	@${REINPLACE_CMD} -e 's|/bin/bash|${LOCALBASE}&|' \
+		${BUILD_WRKSRC}/app-server/tests/suite/v2/environment_info.rs \
 		${BUILD_WRKSRC}/cli/src/debug_sandbox/pid_tracker.rs \
 		${BUILD_WRKSRC}/core/src/command_canonicalization.rs \
 		${BUILD_WRKSRC}/core/src/command_canonicalization_tests.rs \
@@ -105,19 +104,23 @@ post-patch:
 		${BUILD_WRKSRC}/core/src/shell_snapshot_tests.rs \
 		${BUILD_WRKSRC}/core/src/shell_tests.rs \
 		${BUILD_WRKSRC}/core/src/tasks/user_shell_tests.rs \
-		${BUILD_WRKSRC}/core/src/tools/handlers/shell_tests.rs \
 		${BUILD_WRKSRC}/core/src/tools/handlers/unified_exec_tests.rs \
 		${BUILD_WRKSRC}/core/src/tools/runtimes/mod.rs \
 		${BUILD_WRKSRC}/core/src/tools/runtimes/mod_tests.rs \
 		${BUILD_WRKSRC}/core/src/tools/sandboxing_tests.rs \
+		${BUILD_WRKSRC}/core/src/unified_exec/process_manager_tests.rs \
 		${BUILD_WRKSRC}/core/tests/suite/exec.rs \
 		${BUILD_WRKSRC}/core/tests/suite/guardian_review.rs \
+		${BUILD_WRKSRC}/core/tests/suite/shell_snapshot.rs \
 		${BUILD_WRKSRC}/core/tests/suite/unified_exec.rs \
 		${BUILD_WRKSRC}/core/tests/suite/user_notification.rs \
 		${BUILD_WRKSRC}/exec-server/src/process_sandbox_tests.rs \
-		${BUILD_WRKSRC}/exec-server/tests/file_system_unix.rs \
+		${BUILD_WRKSRC}/exec-server/src/shell_snapshot_tests.rs \
+		${BUILD_WRKSRC}/exec-server/tests/common/fake_bwrap.rs \
+		${BUILD_WRKSRC}/exec-server/tests/exec_process.rs \
 		${BUILD_WRKSRC}/shell-command/src/parse_command.rs \
 		${BUILD_WRKSRC}/shell-command/src/shell_detect.rs \
+		${BUILD_WRKSRC}/shell-command/src/shell_snapshot_tests.rs \
 		${BUILD_WRKSRC}/shell-escalation/src/unix/escalate_server.rs \
 		${BUILD_WRKSRC}/tui/src/exec_command.rs \
 		${BUILD_WRKSRC}/utils/path-uri/src/tests.rs
@@ -125,6 +128,7 @@ post-patch:
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/command_exec.rs \
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/hooks_list.rs \
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/session_end.rs \
+		${BUILD_WRKSRC}/app-server/tests/suite/v2/thread_queue.rs \
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/thread_resume.rs \
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/thread_shell_command.rs \
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/turn_interrupt.rs \
@@ -134,7 +138,6 @@ post-patch:
 		${BUILD_WRKSRC}/config/src/hooks_tests.rs \
 		${BUILD_WRKSRC}/core-plugins/src/script_attribution.rs \
 		${BUILD_WRKSRC}/core-plugins/src/script_attribution_tests.rs \
-		${BUILD_WRKSRC}/skills/src/invocation_tests.rs \
 		${BUILD_WRKSRC}/core/src/command_canonicalization_tests.rs \
 		${BUILD_WRKSRC}/core/src/config/config_loader_tests.rs \
 		${BUILD_WRKSRC}/core/src/exec_policy.rs \
@@ -146,24 +149,31 @@ post-patch:
 		${BUILD_WRKSRC}/core/tests/suite/compact.rs \
 		${BUILD_WRKSRC}/core/tests/suite/compact_remote_parity.rs \
 		${BUILD_WRKSRC}/core/tests/suite/exec.rs \
+		${BUILD_WRKSRC}/core/tests/suite/guardian_mcp_elicitation.rs \
 		${BUILD_WRKSRC}/core/tests/suite/hooks.rs \
 		${BUILD_WRKSRC}/core/tests/suite/hooks_mcp.rs \
+		${BUILD_WRKSRC}/core/tests/suite/interrupt_hooks.rs \
 		${BUILD_WRKSRC}/core/tests/suite/network_approval.rs \
 		${BUILD_WRKSRC}/core/tests/suite/openai_file_mcp.rs \
 		${BUILD_WRKSRC}/core/tests/suite/subagent_notifications.rs \
 		${BUILD_WRKSRC}/core/tests/suite/token_budget.rs \
-		${BUILD_WRKSRC}/core/tests/suite/tools.rs \
+		${BUILD_WRKSRC}/core/tests/suite/tool_lifecycle.rs \
 		${BUILD_WRKSRC}/core/tests/suite/unified_exec.rs \
 		${BUILD_WRKSRC}/exec-server/tests/exec_process.rs \
 		${BUILD_WRKSRC}/exec/tests/suite/sandbox.rs \
+		${BUILD_WRKSRC}/exec/tests/suite/seatbelt.rs \
 		${BUILD_WRKSRC}/execpolicy/tests/basic.rs \
+		${BUILD_WRKSRC}/ext/queue/tests/queue_service.rs \
 		${BUILD_WRKSRC}/external-agent-migration/src/lib_tests.rs \
+		${BUILD_WRKSRC}/hooks/src/engine/command_runner_tests.rs \
 		${BUILD_WRKSRC}/hooks/src/engine/mod_tests.rs \
 		${BUILD_WRKSRC}/hooks/src/events/compact.rs \
 		${BUILD_WRKSRC}/hooks/src/events/post_tool_use.rs \
 		${BUILD_WRKSRC}/linux-sandbox/tests/suite/landlock.rs \
 		${BUILD_WRKSRC}/linux-sandbox/tests/suite/managed_proxy.rs \
-		${BUILD_WRKSRC}/shell-command/src/bash.rs \
+		${BUILD_WRKSRC}/memories/write/src/startup_tests.rs \
+		${BUILD_WRKSRC}/skills/src/invocation.rs \
+		${BUILD_WRKSRC}/skills/src/invocation_tests.rs \
 		${BUILD_WRKSRC}/tui/src/app/tests.rs \
 		${BUILD_WRKSRC}/tui/src/chatwidget/tests/app_server.rs \
 		${BUILD_WRKSRC}/tui/src/chatwidget/tests/approval_requests.rs \
@@ -180,13 +190,12 @@ post-build-COMPLETIONS-on:
 		${WRKSRC}/completions/${PORTNAME}.${sh}
 .endfor
 
-do-install:
-.for prog in ${PORTNAME} ${PORTNAME}-responses-api-proxy ${PORTNAME}-code-mode-host
-	${INSTALL_PROGRAM} ${CARGO_TARGET_DIR}/*/${prog} \
-		${STAGEDIR}${PREFIX}/bin
+post-install:
+.for prog in ${PLIST_FILES:Mbin/*}
+	@${STRIP_CMD} ${STAGEDIR}${PREFIX}/${prog}
 .endfor
 
-do-install-COMPLETIONS-on:
+post-install-COMPLETIONS-on:
 	@${MKDIR} ${STAGEDIR}${PREFIX}/etc/bash_completion.d \
 		${STAGEDIR}${PREFIX}/share/fish/completions \
 		${STAGEDIR}${PREFIX}/share/zsh/site-functions
@@ -197,7 +206,7 @@ do-install-COMPLETIONS-on:
 	${INSTALL_DATA} ${WRKSRC}/completions/${PORTNAME}.zsh \
 		${STAGEDIR}${PREFIX}/share/zsh/site-functions/_${PORTNAME}
 
-do-install-DOCS-on:
+post-install-DOCS-on:
 	@${MKDIR} ${STAGEDIR}${DOCSDIR}
 	${INSTALL_MAN} ${PORTDOCS:S|^|${BUILD_WRKSRC}/|} ${STAGEDIR}${DOCSDIR}
 
