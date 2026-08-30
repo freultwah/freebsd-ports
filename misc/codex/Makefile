@@ -13,7 +13,7 @@ LICENSE_FILE=	${WRKSRC}/LICENSE
 
 BROKEN_i386=	fails to build: rustc-LLVM ERROR: out of memory
 
-MAKE_JOBS_NUMBER_LIMIT=	2
+MAKE_JOBS_NUMBER_LIMIT=	6
 
 BUILD_DEPENDS=	gn:devel/gn \
 		protoc:devel/protobuf
