@@ -88,6 +88,8 @@ post-extract:
 	@${MKDIR} ${WRKSRC_crate_v8}/third_party/icu/common
 	@${CP} ${WRKSRC_crate_deno_core_icudata}/src/icudtl.dat \
 		${WRKSRC_crate_v8}/third_party/icu/common
+	@${FIND} ${WRKSRC_crate_mxc_telemetry} -name Cargo.toml -type f \
+		-exec ${REINPLACE_CMD} -e 's|[[:cntrl:]]$$||' {} +
 
 post-patch:
 	@${REINPLACE_CMD} -e 's|/bin/bash|${LOCALBASE}&|' \
