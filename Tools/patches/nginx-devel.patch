@@ -6,7 +6,7 @@
  
 -HTTP_AUTH_LDAP_GH_TUPLE=	kvspb:nginx-auth-ldap:241200e:http_auth_ldap
 -HTTP_AUTH_LDAP_EXTRA_PATCHES=	${PATCHDIR}/extra-patch-ngx_http_auth_ldap_module.c
-+HTTP_AUTH_LDAP_GH_TUPLE=	freultwah:nginx-auth-ldap:9de312b:http_auth_ldap
++HTTP_AUTH_LDAP_GH_TUPLE=	freultwah:nginx-auth-ldap:a02deb2:http_auth_ldap
  HTTP_AUTH_LDAP_VARS=		DSO_EXTMODS+=http_auth_ldap
  HTTP_AUTH_LDAP_USES=		ldap
  
@@ -18,8 +18,8 @@
  SIZE (stnoonan-spnego-http-auth-nginx-module-v1.1.3_GH0.tar.gz) = 32975
 -SHA256 (kvspb-nginx-auth-ldap-241200e_GH0.tar.gz) = d3aa3a5ead311b34059d6ab1b6d2cf3ac8269c47a87b768523c07381229db470
 -SIZE (kvspb-nginx-auth-ldap-241200e_GH0.tar.gz) = 18541
-+SHA256 (freultwah-nginx-auth-ldap-9de312b_GH0.tar.gz) = 3c53bacbb3fb4f7f59cde514738dcbe890738268e20a91bd822211d812f8a28f
-+SIZE (freultwah-nginx-auth-ldap-9de312b_GH0.tar.gz) = 18935
++SHA256 (freultwah-nginx-auth-ldap-a02deb2_GH0.tar.gz) = fce8ab2af62ac09ac0d1013145f933c751d4122ef9d0bd8049a52b728e005d84
++SIZE (freultwah-nginx-auth-ldap-a02deb2_GH0.tar.gz) = 21279
  SHA256 (sto-ngx_http_auth_pam_module-v1.5.5_GH0.tar.gz) = 98a71617d9119ae784993e3789ce8766fdf2ff2479691f3dc6cf8d8763f8d364
  SIZE (sto-ngx_http_auth_pam_module-v1.5.5_GH0.tar.gz) = 7233
  SHA256 (arut-nginx-dav-ext-module-v3.0.0_GH0.tar.gz) = d2499d94d82d4e4eac8425d799e52883131ae86a956524040ff2fd230ef9f859
