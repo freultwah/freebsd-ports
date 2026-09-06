@@ -31,7 +31,7 @@ GH_PROJECT=	ruTorrent
 #GH_TAGNAME=     9ee6a72
 
 
-USE_PHP=	bcmath ctype curl filter dom json mbstring opcache openssl phar posix session sockets xml zip zlib
+USE_PHP=	bcmath curl filter json mbstring opcache openssl posix session simplexml sockets zlib
 
 OPTIONS_DEFINE=	EXAMPLES
 OPTIONS_GROUP=	PLUGINS 3RDPARTY
@@ -73,6 +73,7 @@ DATA_DIRS=	data
 
 DATADIR_DESC=	Replacement of the cur torrent data dir
 DATADIR_DIRS=	datadir
+DATADIR_USE=	php=ctype
 
 DISKSPACE_DESC=	Adds an easy to read disk meter
 DISKSPACE_DIRS=	diskspace
@@ -85,6 +86,7 @@ ERASEDATA_DIRS=	erasedata
 
 EXTSEARCH_DESC=	Allows to search many popular torrent sites
 EXTSEARCH_DIRS=	extsearch
+EXTSEARCH_USE=	php=dom
 
 FEEDS_DESC=	Making RSS feeds with information of torrents
 FEEDS_DIRS=	feeds
@@ -94,6 +96,7 @@ FILEDROP_DIRS=	filedrop
 
 GEOIP_DESC=	Shows geolocation of peers for the selected torrent
 GEOIP_DIRS=	geoip
+GEOIP_USE=	php=phar,sqlite3
 
 HISTORY_DESC=	Log a history of torrents
 HISTORY_DIRS=	history
@@ -122,9 +125,11 @@ RETRACKERS_DIRS=retrackers
 
 RSS_DESC=	Fetch torrents via rss download links
 RSS_DIRS=	rss rssurlrewrite
+RSS_USE=	php=dom
 
 RUTRKCHK_DESC=	Checks the rutracker.org for changed torrents
 RUTRKCHK_DIRS=	rutracker_check
+RUTRKCHK_USE=	php=ctype
 
 SCHEDULER_DESC=	Scheduler to control limits
 SCHEDULER_DIRS=	scheduler
@@ -141,6 +146,7 @@ SWTORRENT_DIRS=	show_peers_like_wtorrent
 
 SOURCE_DESC=	Adds a "Get .torrent" to the click context menu
 SOURCE_DIRS=	source
+SOURCE_USE=	php=zip
 
 SPECTROGRAM_DESC=	Show spectrogram of audio files
 SPECTROGRAM_DIRS=	spectrogram
@@ -151,9 +157,11 @@ THEME_DIRS=	theme
 
 THROTTLE_DESC=	Set limits of speed for groups of torrents
 THROTTLE_DIRS=	throttle
+THROTTLE_USE=	php=ctype
 
 TRACKLBLS_DESC=	Adds a set of labels on the category panel
 TRACKLBLS_DIRS=	tracklabels
+TRACKLBLS_USE=	php=fileinfo
 
 TRAFIC_DESC=	Subsystem for monitoring rtorrent traffic totals
 TRAFIC_DIRS=	trafic
@@ -167,6 +175,7 @@ UPLOADETA_DIRS=	uploadeta
 
 XMPP_DESC=	Send notification via xmpp about finished downloads
 XMPP_DIRS=	xmpp
+XMPP_USE=	php=xml
 
 HOSTNAME_DESC=		Add hostname column to peers tab
 HOSTNAME_DIRS=		hostname
