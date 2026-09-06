@@ -31,7 +31,7 @@ GH_PROJECT=	ruTorrent
 #GH_TAGNAME=     9ee6a72
 
 
-USE_PHP=	bcmath curl filter json mbstring opcache openssl posix session simplexml sockets zlib
+USE_PHP=	bcmath curl filter json mbstring opcache openssl posix session sockets zlib
 
 OPTIONS_DEFINE=	EXAMPLES
 OPTIONS_GROUP=	PLUGINS 3RDPARTY
@@ -103,6 +103,7 @@ HISTORY_DIRS=	history
 
 HTTPRPC_DESC=	Replacement for the mod_scgi webserver module
 HTTPRPC_DIRS=	httprpc
+HTTPRPC_USE=	php=simplexml
 
 IPAD_DESC=	Use scrolling and right-click mouse button
 IPAD_DIRS=	ipad
