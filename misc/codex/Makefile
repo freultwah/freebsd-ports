@@ -1,6 +1,6 @@
 PORTNAME=	codex
 DISTVERSIONPREFIX=	rust-v
-DISTVERSION=	0.153.4
+DISTVERSION=	0.154.0
 CATEGORIES=	misc devel
 
 MAINTAINER=	tagattie@FreeBSD.org
@@ -27,6 +27,9 @@ TEST_DEPENDS=	bash:shells/bash
 
 USES=		cargo gnome llvm:min=21 ninja:build python:test \
 		shebangfix ssl
+
+# crates.io requires a Cargo user agent for crate downloads.
+FETCH_BEFORE_ARGS+=	--user-agent=cargo
 
 USE_GITHUB=	yes
 GH_ACCOUNT=	openai
@@ -210,5 +213,9 @@ do-install-COMPLETIONS-on:
 do-install-DOCS-on:
 	@${MKDIR} ${STAGEDIR}${DOCSDIR}
 	${INSTALL_MAN} ${PORTDOCS:S|^|${BUILD_WRKSRC}/|} ${STAGEDIR}${DOCSDIR}
+
+# makesum passes these large lists to a sub-make explicitly.  Exporting them
+# again through MAKEFLAGS exceeds ARG_MAX when the fetch command is executed.
+.MAKEOVERRIDES:=	${.MAKEOVERRIDES:NDISTFILES:NMASTER_SITES}
 
 .include <bsd.port.mk>
