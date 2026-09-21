@@ -64,6 +64,7 @@ CARGO_BUILD_ARGS=	--bin ${PORTNAME} \
 			--bin ${PORTNAME}-responses-api-proxy
 CARGO_TEST_ARGS=	--all-features --no-fail-fast
 CARGO_ENV=		OPENSSL_NO_VENDOR=1 \
+			CARGO_PROFILE_RELEASE_LTO=thin \
 			V8_FROM_SOURCE=1 \
 			GN=${LOCALBASE}/bin/gn \
 			NINJA=${NINJA_CMD} \
