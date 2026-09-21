@@ -57,6 +57,9 @@ SHEBANG_FILES=	codex-rs/app-server-protocol/scripts/write_schema_fixtures.py \
 		codex-rs/vendor/bubblewrap/tests/use-as-subproject/assert-correct-rpath.py \
 		codex-rs/windows-sandbox-rs/sandbox_smoketests.py
 
+# Prevent the Ports framework from overriding ThinLTO with full LTO.
+WITHOUT_LTO=		yes
+
 CARGO_CARGOTOML=	${BUILD_WRKSRC}/Cargo.toml
 CARGO_CARGOLOCK=	${BUILD_WRKSRC}/Cargo.lock
 CARGO_BUILD_ARGS=	--bin ${PORTNAME} \
