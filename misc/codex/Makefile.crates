@@ -72,8 +72,8 @@ CARGO_CRATES=	Inflector-0.11.4 \
 		autocfg-1.5.0 \
 		aws-config-1.8.12 \
 		aws-credential-types-1.2.11 \
-		aws-lc-rs-1.16.2 \
-		aws-lc-sys-0.39.0 \
+		aws-lc-rs-1.18.1 \
+		aws-lc-sys-0.45.0 \
 		aws-runtime-1.5.17 \
 		aws-sdk-signin-1.2.0 \
 		aws-sdk-sso-1.91.0 \
@@ -140,6 +140,7 @@ CARGO_CRATES=	Inflector-0.11.4 \
 		cached_proc_macro-0.25.0 \
 		cached_proc_macro_types-0.1.1 \
 		calendrical_calculations-0.2.4 \
+		caseless-0.2.2 \
 		castaway-0.2.4 \
 		cbc-0.1.2 \
 		cc-1.2.55 \
@@ -786,7 +787,7 @@ CARGO_CRATES=	Inflector-0.11.4 \
 		quick-xml-0.41.0 \
 		quickcheck-1.1.0 \
 		quinn-0.11.9 \
-		quinn-proto-0.11.14 \
+		quinn-proto-0.11.15 \
 		quinn-udp-0.5.14 \
 		quinn-udp-0.6.1 \
 		quote-1.0.45 \
@@ -881,10 +882,12 @@ CARGO_CRATES=	Inflector-0.11.4 \
 		rusticata-macros-4.1.0 \
 		rustix-0.38.44 \
 		rustix-1.1.4 \
-		rustls-0.23.36 \
+		rustls-0.23.45 \
 		rustls-native-certs-0.8.3 \
 		rustls-pki-types-1.14.0 \
-		rustls-webpki-0.103.13 \
+		rustls-platform-verifier-0.7.0 \
+		rustls-platform-verifier-android-0.1.1 \
+		rustls-webpki-0.103.15 \
 		rustversion-1.0.22 \
 		rustyline-14.0.0 \
 		ryu-1.0.22 \
@@ -1322,4 +1325,5 @@ CARGO_CRATES=	Inflector-0.11.4 \
 		crossterm@git+https://github.com/openai-oss-forks/crossterm?rev=45fecb9508105988f42fe6ff0441783ed3717f92\#45fecb9508105988f42fe6ff0441783ed3717f92 \
 		tungstenite@git+https://github.com/openai-oss-forks/tungstenite-rs?rev=4fffad30fe373adbdcffab9545e9e9bf4f2fc19f\#4fffad30fe373adbdcffab9545e9e9bf4f2fc19f \
 		tokio-tungstenite@git+https://github.com/openai-oss-forks/tokio-tungstenite?rev=0e5b2d73aa18dd9f0a50ee9ff199d5aef7594186\#0e5b2d73aa18dd9f0a50ee9ff199d5aef7594186 \
-		notify,notify-types@git+https://github.com/notify-rs/notify.git?rev=48415246732dc426577684bf03c558579cf0b081\#48415246732dc426577684bf03c558579cf0b081
+		notify,notify-types@git+https://github.com/notify-rs/notify.git?rev=48415246732dc426577684bf03c558579cf0b081\#48415246732dc426577684bf03c558579cf0b081 \
+		h3,h3-quinn@git+https://github.com/hyperium/h3?rev=e07e69412876f7e26f026bd75a48b2704d8c8283\#e07e69412876f7e26f026bd75a48b2704d8c8283
