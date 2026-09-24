@@ -26,7 +26,7 @@ GH_PROJECT=	proftpd
 GH_TAGNAME=	3d40203
 
 #GH_TUPLE=	jbenden:mod_clamav:f277f03:mod_clamav/vendor/github.com/jbenden/mod_clamav
-GH_TUPLE=	freultwah:mod_clamav:12482da:mod_clamav/vendor/github.com/freultwah/mod_clamav
+GH_TUPLE=	freultwah:mod_clamav:bb02279:mod_clamav/vendor/github.com/freultwah/mod_clamav
 
 #WRKSRC=		${WRKDIR}/${GH_PROJECT}-${GH_TAGNAME}
 
