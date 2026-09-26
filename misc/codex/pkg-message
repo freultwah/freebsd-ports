@@ -1,0 +1,27 @@
+[
+{ type: install
+  message: <<EOM
+Codex starts a per-user background server automatically. No rc service is needed.
+Use --no-daemon to run with an embedded server instead.
+
+The background server keeps its own copy of the Codex package. After upgrading
+Codex with pkg, refresh that copy as your regular user:
+
+  codex app-server daemon update --from-cli
+
+This asks for confirmation and restarts a running server, interrupting active
+work. Upstream automatic binary updates are disabled on FreeBSD.
+EOM
+}
+{ type: upgrade
+  message: <<EOM
+If you have used the Codex background server, refresh its private package copy
+as your regular user after upgrading:
+
+  codex app-server daemon update --from-cli
+
+This asks for confirmation and restarts a running server, interrupting active
+work. Upstream automatic binary updates are disabled on FreeBSD; use pkg.
+EOM
+}
+]

@@ -1,6 +1,7 @@
 PORTNAME=	codex
 DISTVERSIONPREFIX=	rust-v
 DISTVERSION=	0.157.0
+PORTREVISION=	1
 CATEGORIES=	misc devel
 
 MAINTAINER=	tagattie@FreeBSD.org
@@ -62,9 +63,9 @@ WITHOUT_LTO=		yes
 
 CARGO_CARGOTOML=	${BUILD_WRKSRC}/Cargo.toml
 CARGO_CARGOLOCK=	${BUILD_WRKSRC}/Cargo.lock
-CARGO_BUILD_ARGS=	--bin ${PORTNAME} \
-			--bin ${PORTNAME}-code-mode-host \
-			--bin ${PORTNAME}-responses-api-proxy
+CODEX_BINARIES=		${PORTNAME} ${PORTNAME}-code-mode-host \
+			${PORTNAME}-responses-api-proxy
+CARGO_BUILD_ARGS=	${CODEX_BINARIES:S/^/--bin /}
 CARGO_TEST_ARGS=	--all-features --no-fail-fast
 CARGO_ENV=		OPENSSL_NO_VENDOR=1 \
 			CARGO_PROFILE_RELEASE_LTO=thin \
@@ -79,7 +80,9 @@ BUILD_WRKSRC=	${WRKSRC}/codex-rs
 
 PLIST_FILES=	bin/${PORTNAME} \
 		bin/${PORTNAME}-code-mode-host \
-		bin/${PORTNAME}-responses-api-proxy
+		bin/${PORTNAME}-responses-api-proxy \
+		${CODEX_BINARIES:S|^|libexec/${PORTNAME}/bin/|} \
+		libexec/${PORTNAME}/codex-package.json
 PORTDOCS=	README.md config.md
 
 OPTIONS_DEFINE=		COMPLETIONS DOCS
@@ -197,10 +200,16 @@ post-build-COMPLETIONS-on:
 .endfor
 
 do-install:
-.for prog in ${PLIST_FILES:Mbin/*:S|bin/||}
+	@${MKDIR} ${STAGEDIR}${PREFIX}/libexec/${PORTNAME}/bin
+.for prog in ${CODEX_BINARIES}
 	${INSTALL_PROGRAM} ${CARGO_TARGET_DIR}/*/${prog} \
-		${STAGEDIR}${PREFIX}/bin
+		${STAGEDIR}${PREFIX}/libexec/${PORTNAME}/bin
+	${LN} -sf ../libexec/${PORTNAME}/bin/${prog} \
+		${STAGEDIR}${PREFIX}/bin/${prog}
 .endfor
+	@${PRINTF} '{"layoutVersion":1,"version":"${DISTVERSION}","target":"%s","entrypoint":"bin/codex"}\n' \
+		"$$(${RUSTC} --print host-tuple)" > \
+		${STAGEDIR}${PREFIX}/libexec/${PORTNAME}/codex-package.json
 
 do-install-COMPLETIONS-on:
 	@${MKDIR} ${STAGEDIR}${PREFIX}/etc/bash_completion.d \
