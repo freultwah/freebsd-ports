@@ -68,7 +68,7 @@ Adapted for Samba 4.20 by: Andrea venturoli <ml@netfence.it>
 +	};
 +
 +	for(base = &base_dir[0]; *base != NULL; base++) {
-+		snprintf(buf, bufsize, "%s/fd/%%lu", *base);
++		snprintf(buf, bufsize, "%s/fd/%%d", *base);
 +		if(freebsd_fdesc_check(buf)) {
 +			return buf;
 +		}
@@ -115,7 +115,7 @@ Adapted for Samba 4.20 by: Andrea venturoli <ml@netfence.it>
 +#if defined(__clang__)
 +#pragma clang diagnostic pop
 +#endif
-+	SMB_ASSERT(written >= 0);
++	SMB_ASSERT(written >= 0 && (size_t)written < sizeof(buf->buf));
  
  	return buf->buf;
  }
