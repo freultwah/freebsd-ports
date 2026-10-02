@@ -435,7 +435,7 @@ CARGO_CRATES=	Inflector-0.11.4 \
 		gstreamer-base-sys-0.25.3 \
 		gstreamer-sys-0.25.2 \
 		gzip-header-1.0.0 \
-		h2-0.4.16 \
+		h2-0.4.19 \
 		half-2.7.1 \
 		hash32-0.2.1 \
 		hash32-0.3.1 \
