@@ -1,52 +1,46 @@
---- codex-rs/core/src/tools/runtimes/apply_patch.rs.orig	2026-08-26 18:43:43 UTC
+--- codex-rs/core/src/tools/runtimes/apply_patch.rs.orig
 +++ codex-rs/core/src/tools/runtimes/apply_patch.rs
-@@ -91,6 +91,16 @@ impl ApplyPatchRuntime {
-         if !attempt.sandbox_requested {
-             return None;
-         }
-+        // LOCAL: the sandboxed fs helper requires Landlock/seatbelt/Windows
-+        // sandboxing and fails closed on FreeBSD with
-+        // "filesystem sandbox cannot be enforced on this executor".
-+        if !cfg!(any(
-+            target_os = "linux",
-+            target_os = "macos",
-+            target_os = "windows"
-+        )) {
-+            return None;
-+        }
- 
-         let permissions = effective_permission_profile(
-             attempt.exec_server_permissions,
-@@ -178,14 +188,24 @@ impl ToolRuntime<ApplyPatchRequest, ApplyPatchRuntimeO
-             &req.action.patch,
-             ApplyPatchOptions {
+@@ -5,6 +5,7 @@
+ //! sandboxing enforced by the explicit filesystem sandbox context.
+ use crate::exec::is_likely_sandbox_denied;
+ use crate::session::turn_context::TurnEnvironment;
++use crate::tools::handlers::apply_patch::apply_patch_file_system_sandbox;
+ use crate::tools::sandboxing::Approvable;
+ use crate::tools::sandboxing::ApprovalAction;
+ use crate::tools::sandboxing::ExecApprovalRequirement;
+@@ -174,6 +175,16 @@
+         let started_at = Instant::now();
+         let fs = req.turn_environment.environment.get_filesystem();
+         let sandbox = Self::file_system_sandbox_context_for_attempt(req, attempt);
++        let sandbox = apply_patch_file_system_sandbox(&req.turn_environment, sandbox.as_ref());
++        // Keep local BSD symlink handling without changing remote executors
++        // or environments that restrict filesystem reads.
++        let local_bsd_full_read = cfg!(any(target_os = "freebsd", target_os = "openbsd"))
++            && !req.turn_environment.environment.is_remote()
++            && req
++                .turn_environment
++                .permission_profile_with_workspace_roots()
++                .file_system_sandbox_policy()
++                .has_full_disk_read_access();
+         let mut stdout = Vec::new();
+         let mut stderr = Vec::new();
+         let result = codex_apply_patch::apply_patch_with_options(
+@@ -182,7 +193,8 @@
                  update_file_mode: req.action.update_file_mode(),
--                // Only reject links when an otherwise-required sandbox was bypassed.
--                // Executor-managed sandboxes can have SandboxType::None.
+                 // Only reject links when an otherwise-required sandbox was bypassed.
+                 // Executor-managed sandboxes can have SandboxType::None.
 -                follow_symlinks: attempt.sandbox_requested
--                    || !attempt.manager.should_sandbox(
--                        attempt.permissions,
--                        self.sandbox_preference(),
--                        attempt.enforce_managed_network,
--                    ),
-+                // Only reject links when an otherwise-required sandbox was
-+                // bypassed. LOCAL: FreeBSD has no platform sandbox, so keep
-+                // 0.148 follow-symlinks instead of no-follow (which rejects
-+                // apply_patch with "require an absolute path").
-+                follow_symlinks: if cfg!(any(
-+                    target_os = "linux",
-+                    target_os = "macos",
-+                    target_os = "windows"
-+                )) {
-+                    attempt.sandbox_requested
-+                        || !attempt.manager.should_sandbox(
-+                            attempt.permissions,
-+                            self.sandbox_preference(),
-+                            attempt.enforce_managed_network,
-+                        )
-+                } else {
-+                    true
-+                },
-             },
-             &req.action.cwd,
++                follow_symlinks: local_bsd_full_read
++                    || attempt.sandbox_requested
+                     || !attempt.manager.should_sandbox(
+                         attempt.permissions,
+                         self.sandbox_preference(),
+@@ -193,7 +205,7 @@
              &mut stdout,
+             &mut stderr,
+             fs.as_ref(),
+-            sandbox.as_ref(),
++            sandbox,
+         )
+         .await;
+         let stdout = String::from_utf8_lossy(&stdout).into_owned();
