@@ -26,8 +26,11 @@ RUN_DEPENDS=	bash:shells/bash \
 		rg:textproc/ripgrep
 TEST_DEPENDS=	bash:shells/bash
 
-USES=		cargo gnome llvm:min=21 ninja:build python:test \
+USES=		cargo dos2unix gnome llvm:min=21 ninja:build python:test \
 		shebangfix ssl
+
+DOS2UNIX_WRKSRC=${WRKSRC_crate_mxc_telemetry}
+DOS2UNIX_REGEX=	.*/Cargo\.toml
 
 # crates.io requires a Cargo user agent for crate downloads.
 FETCH_BEFORE_ARGS+=	--user-agent=cargo
@@ -69,6 +72,7 @@ CARGO_ENV=		OPENSSL_NO_VENDOR=1 \
 			CLANG_BASE_PATH=${LLVM_PREFIX}
 
 BINARY_ALIAS=	python3=${PYTHON_CMD}
+PORTSCOUT=	limit:^rust-v[0-9]\.
 
 BUILD_WRKSRC=	${WRKSRC}/codex-rs
 
@@ -92,13 +96,12 @@ post-extract:
 	@${MKDIR} ${WRKSRC_crate_v8}/third_party/icu/common
 	@${CP} ${WRKSRC_crate_deno_core_icudata}/src/icudtl.dat \
 		${WRKSRC_crate_v8}/third_party/icu/common
-	@${FIND} ${WRKSRC_crate_mxc_telemetry} -name Cargo.toml -type f \
-		-exec ${REINPLACE_CMD} -e 's|[[:cntrl:]]$$||' {} +
 
 post-patch:
 	@${REINPLACE_CMD} -e 's|/bin/bash|${LOCALBASE}&|' \
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/environment_info.rs \
 		${BUILD_WRKSRC}/cli/src/debug_sandbox/pid_tracker.rs \
+		${BUILD_WRKSRC}/cli/tests/exec_server/pid_namespace_tests.rs \
 		${BUILD_WRKSRC}/core/src/command_canonicalization.rs \
 		${BUILD_WRKSRC}/core/src/command_canonicalization_tests.rs \
 		${BUILD_WRKSRC}/core/src/context/world_state/environment_render_tests.rs \
@@ -117,11 +120,15 @@ post-patch:
 		${BUILD_WRKSRC}/core/tests/suite/guardian_review.rs \
 		${BUILD_WRKSRC}/core/tests/suite/shell_snapshot.rs \
 		${BUILD_WRKSRC}/core/tests/suite/unified_exec.rs \
+		${BUILD_WRKSRC}/core/tests/suite/unified_exec_stdin_approval.rs \
+		${BUILD_WRKSRC}/core/tests/suite/unified_exec_stdin_review_size.rs \
 		${BUILD_WRKSRC}/core/tests/suite/user_notification.rs \
 		${BUILD_WRKSRC}/exec-server/src/process_sandbox_tests.rs \
+		${BUILD_WRKSRC}/exec-server/src/shell_snapshot_file_tests.rs \
 		${BUILD_WRKSRC}/exec-server/src/shell_snapshot_tests.rs \
 		${BUILD_WRKSRC}/exec-server/tests/common/fake_bwrap.rs \
 		${BUILD_WRKSRC}/exec-server/tests/exec_process.rs \
+		${BUILD_WRKSRC}/hooks/src/engine/command_runner_tests.rs \
 		${BUILD_WRKSRC}/shell-command/src/parse_command.rs \
 		${BUILD_WRKSRC}/shell-command/src/shell_detect.rs \
 		${BUILD_WRKSRC}/shell-command/src/shell_snapshot_tests.rs \
@@ -130,7 +137,10 @@ post-patch:
 		${BUILD_WRKSRC}/utils/path-uri/src/tests.rs
 	@${REINPLACE_CMD} -e 's|python3|${PYTHON_VERSION}|' \
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/command_exec.rs \
+		${BUILD_WRKSRC}/app-server/tests/suite/v2/guardian_action_budget_tests.rs \
+		${BUILD_WRKSRC}/app-server/tests/suite/v2/guardian_v2.rs \
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/hooks_list.rs \
+		${BUILD_WRKSRC}/app-server/tests/suite/v2/selected_capability_stack.rs \
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/session_end.rs \
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/thread_queue.rs \
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/thread_resume.rs \
@@ -138,6 +148,7 @@ post-patch:
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/turn_interrupt.rs \
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/turn_start.rs \
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/turn_start_zsh_fork.rs \
+		${BUILD_WRKSRC}/cli/tests/sandbox_tty.rs \
 		${BUILD_WRKSRC}/config/src/config_requirements.rs \
 		${BUILD_WRKSRC}/config/src/hooks_tests.rs \
 		${BUILD_WRKSRC}/core-plugins/src/script_attribution.rs \
@@ -156,6 +167,8 @@ post-patch:
 		${BUILD_WRKSRC}/core/tests/suite/hooks.rs \
 		${BUILD_WRKSRC}/core/tests/suite/hooks_mcp.rs \
 		${BUILD_WRKSRC}/core/tests/suite/interrupt_hooks.rs \
+		${BUILD_WRKSRC}/core/tests/suite/mcp_subagent_elicitation.rs \
+		${BUILD_WRKSRC}/core/tests/suite/mcp_user_verification.rs \
 		${BUILD_WRKSRC}/core/tests/suite/network_approval.rs \
 		${BUILD_WRKSRC}/core/tests/suite/openai_file_mcp.rs \
 		${BUILD_WRKSRC}/core/tests/suite/subagent_notifications.rs \
@@ -172,9 +185,14 @@ post-patch:
 		${BUILD_WRKSRC}/hooks/src/engine/mod_tests.rs \
 		${BUILD_WRKSRC}/hooks/src/events/compact.rs \
 		${BUILD_WRKSRC}/hooks/src/events/post_tool_use.rs \
+		${BUILD_WRKSRC}/linux-sandbox/tests/suite/daemon_sockets_tests.rs \
 		${BUILD_WRKSRC}/linux-sandbox/tests/suite/landlock.rs \
 		${BUILD_WRKSRC}/linux-sandbox/tests/suite/managed_proxy.rs \
+		${BUILD_WRKSRC}/linux-sandbox/tests/suite/managed_proxy_unix_sockets_tests.rs \
 		${BUILD_WRKSRC}/memories/write/src/startup_tests.rs \
+		${BUILD_WRKSRC}/rmcp-client/tests/stdio_descriptor_boundary.rs \
+		${BUILD_WRKSRC}/rmcp-client/tests/stdio_stderr_cleanup.rs \
+		${BUILD_WRKSRC}/sandboxing/src/seatbelt_daemon_socket_tests.rs \
 		${BUILD_WRKSRC}/skills/src/invocation.rs \
 		${BUILD_WRKSRC}/skills/src/invocation_tests.rs \
 		${BUILD_WRKSRC}/tui/src/app/tests.rs \
