@@ -1,6 +1,6 @@
 --- codex-rs/core/src/tools/handlers/apply_patch.rs.orig
 +++ codex-rs/core/src/tools/handlers/apply_patch.rs
-@@ -46,6 +46,7 @@
+@@ -45,6 +45,7 @@
  use codex_apply_patch::Hunk;
  use codex_apply_patch::StreamingPatchParser;
  use codex_exec_server::ExecutorFileSystem;
@@ -8,10 +8,10 @@
  use codex_features::Feature;
  use codex_protocol::models::AdditionalPermissionProfile;
  use codex_protocol::models::FileSystemPermissions;
-@@ -71,6 +72,23 @@
-         ApplyPatchFileUpdateMode::PreserveLineEndings
-     } else {
-         ApplyPatchFileUpdateMode::NormalizeToLf
+@@ -70,6 +71,23 @@
+ impl ApplyPatchHandler {
+     pub(crate) fn new(multi_environment: bool) -> Self {
+         Self { multi_environment }
 +    }
 +}
 +
@@ -31,35 +31,36 @@
 +        sandbox
      }
  }
-
-@@ -357,12 +375,14 @@
-         };
+ 
+@@ -338,11 +356,13 @@
+         )?;
          let fs = turn_environment.environment.get_filesystem();
          let sandbox = turn_environment.sandbox_context(/*additional_permissions*/ None);
 +        let verification_sandbox =
 +            apply_patch_file_system_sandbox(turn_environment, Some(&sandbox));
-         match codex_apply_patch::verify_apply_patch_args_with_mode(
+         match codex_apply_patch::verify_apply_patch_args(
              args,
              turn_environment.cwd(),
-             apply_patch_file_update_mode(&turn),
              fs.as_ref(),
 -            Some(&sandbox),
 +            verification_sandbox,
          )
          .await
          {
-@@ -467,12 +487,13 @@
+@@ -446,8 +466,14 @@
+     tool_name: &str,
  ) -> Result<Option<FunctionToolOutput>, FunctionCallError> {
-     let turn = &step_context.turn;
      let sandbox = turn_environment.sandbox_context(/*additional_permissions*/ None);
+-    match codex_apply_patch::maybe_parse_apply_patch_verified(command, cwd, fs, Some(&sandbox))
+-        .await
 +    let verification_sandbox = apply_patch_file_system_sandbox(&turn_environment, Some(&sandbox));
-     match codex_apply_patch::maybe_parse_apply_patch_verified_with_mode(
-         command,
-         cwd,
-         apply_patch_file_update_mode(turn),
-         fs,
--        Some(&sandbox),
++    match codex_apply_patch::maybe_parse_apply_patch_verified(
++        command,
++        cwd,
++        fs,
 +        verification_sandbox,
-     )
-     .await
++    )
++    .await
      {
+         codex_apply_patch::MaybeApplyPatchVerified::Body(changes) => {
+             let tool_ctx = ToolCtx {

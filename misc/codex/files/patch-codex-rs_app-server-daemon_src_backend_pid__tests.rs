@@ -1,8 +1,17 @@
 --- codex-rs/app-server-daemon/src/backend/pid_tests.rs.orig
 +++ codex-rs/app-server-daemon/src/backend/pid_tests.rs
-@@ -647,0 +648 @@
+@@ -650,6 +650,7 @@
+     );
+ }
+ 
 +#[cfg(not(target_os = "freebsd"))]
-@@ -694,0 +696,29 @@
+ #[tokio::test]
+ async fn stale_creation_time_never_stops_reused_pid() {
+     let temp = TempDir::new().expect("temp");
+@@ -697,6 +698,35 @@
+         assert!(!backend.pid_file.exists());
+         assert!(!backend.pid_file.with_extension("shutdown").exists());
+     }
 +}
 +
 +#[cfg(target_os = "freebsd")]
@@ -32,3 +41,6 @@
 +    );
 +    assert!(backend.pid_file.exists());
 +    assert!(super::process_exists(std::process::id()));
+ }
+ 
+ #[cfg(windows)]

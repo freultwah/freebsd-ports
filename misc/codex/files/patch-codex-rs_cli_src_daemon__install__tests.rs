@@ -1,6 +1,9 @@
 --- codex-rs/cli/src/daemon_install_tests.rs.orig
 +++ codex-rs/cli/src/daemon_install_tests.rs
-@@ -11,0 +12,8 @@
+@@ -9,6 +9,14 @@
+         installed_version: Some("0.152.0".into()),
+         restart_required: true,
+     };
 +    #[cfg(target_os = "freebsd")]
 +    insta::assert_snapshot!(describe_install(&request), @r"
 +    Replace installed daemon version 0.152.0 with CLI version 0.0.0 from /cli/package.
@@ -9,3 +12,6 @@
 +    The running daemon will restart; active or queued work may be interrupted.
 +    ");
 +    #[cfg(not(target_os = "freebsd"))]
+     insta::assert_snapshot!(describe_install(&request), @r"
+     Replace installed daemon version 0.152.0 with CLI version 0.0.0 from /cli/package.
+     The daemon package will be installed in /home/packages/app-server-daemon.

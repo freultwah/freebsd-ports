@@ -1,6 +1,9 @@
 --- codex-rs/app-server-daemon/src/prepare_install_tests.rs.orig
 +++ codex-rs/app-server-daemon/src/prepare_install_tests.rs
-@@ -385,0 +386,34 @@
+@@ -373,3 +373,37 @@
+         PathBuf::from("missing-release")
+     );
+ }
 +
 +// Ports provide rg as a runtime dependency rather than copying it into Codex.
 +#[cfg(target_os = "freebsd")]
