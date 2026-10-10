@@ -1,7 +1,7 @@
 
 PORTNAME=			${SAMBA4_BASENAME}425
 PORTVERSION=			${SAMBA4_VERSION}
-PORTREVISION=			2
+PORTREVISION=			3
 CATEGORIES?=			net
 MASTER_SITES=			SAMBA/samba/stable SAMBA/samba/rc
 DISTNAME=			${SAMBA4_DISTNAME}
@@ -603,9 +603,9 @@ pre-configure:
 .endif
 
 post-install-rm-junk:
-				${RM} -r ${STAGEDIR}${PYTHON_SITELIBDIR}/samba/third_party
-				${FIND} ${STAGEDIR}${PYTHON_SITELIBDIR} -name __pycache__ \
-					-type d -print0 | ${XARGS} -0 -n 1 -t ${RM} -r
+				@[ ! -d ${STAGEDIR}${PYTHON_SITELIBDIR} ] || \
+					(${RM} -r ${STAGEDIR}${PYTHON_SITELIBDIR}/samba/third_party && \
+					${FIND} ${STAGEDIR}${PYTHON_SITELIBDIR} -type d -name __pycache__ -exec ${RM} -r {} +)
 				${FIND} ${STAGEDIR} -type f -empty -delete
 
 post-install-fix-manpages:
