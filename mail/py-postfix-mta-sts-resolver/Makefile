@@ -1,7 +1,7 @@
 PORTNAME=	postfix-mta-sts-resolver
 PORTVERSION=	1.5.1
 DISTVERSIONPREFIX=	v
-PORTREVISION=	6
+PORTREVISION=	7
 CATEGORIES=	mail python
 PKGNAMEPREFIX=	${PYTHON_PKGNAMEPREFIX}
 
@@ -22,7 +22,7 @@ RUN_DEPENDS=	${LOCALBASE}/share/certs/ca-root-nss.crt:security/ca_root_nss \
 USES=		python:3.9+
 USE_GITHUB=	yes
 GH_ACCOUNT=	freultwah
-GH_TAGNAME=	ae01972
+GH_TAGNAME=	4a3e59f
 USE_PYTHON=	autoplist distutils
 USE_RC_SUBR=	mta_sts
 
