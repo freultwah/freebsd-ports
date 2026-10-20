@@ -12,14 +12,8 @@
  
 --- distinfo.orig	2026-05-04 06:48:08.611997000 +0000
 +++ distinfo	2026-05-04 06:58:50.827973000 +0000
-@@ -41,8 +41,8 @@
- SIZE (atomx-nginx-http-auth-digest-274490c_GH0.tar.gz) = 17815
- SHA256 (stnoonan-spnego-http-auth-nginx-module-3575542_GH0.tar.gz) = 6d710f97bef58b2d5dc54445c0e48103786425f6d4ab18cf30a2168904d0ba62
- SIZE (stnoonan-spnego-http-auth-nginx-module-3575542_GH0.tar.gz) = 24680
+@@ -22,2 +22,2 @@
 -SHA256 (kvspb-nginx-auth-ldap-83c059b_GH0.tar.gz) = e76e9e117ad51af578a68fa7a30c256178796bb271fa77f01c93281a92b09921
 -SIZE (kvspb-nginx-auth-ldap-83c059b_GH0.tar.gz) = 18547
 +SHA256 (freultwah-nginx-auth-ldap-407f0f4_GH0.tar.gz) = 08e5d917bc873916a7b3e8e2ca2ba1dcadf2099a9e958bdd5f3fbd4886b5ee4d
 +SIZE (freultwah-nginx-auth-ldap-407f0f4_GH0.tar.gz) = 21435
- SHA256 (sto-ngx_http_auth_pam_module-v1.5.3_GH0.tar.gz) = 882018fea8d6955ab3fe294aafa8ebb1fdff4eac313c29583fef02c6de76fae7
- SIZE (sto-ngx_http_auth_pam_module-v1.5.3_GH0.tar.gz) = 7084
- SHA256 (arut-nginx-dav-ext-module-v3.0.0_GH0.tar.gz) = d2499d94d82d4e4eac8425d799e52883131ae86a956524040ff2fd230ef9f859
