@@ -2,6 +2,7 @@
 
 PORTNAME=	wordpress
 DISTVERSION=	7.1.3
+PORTREVISION=	1
 PORTEPOCH=	1
 CATEGORIES=	www
 MASTER_SITES=	http://wordpress.org/
@@ -13,7 +14,7 @@ LICENSE=	GPLv2
 
 CONFLICTS_INSTALL=	de-wordpress-[0-9].* ja-wordpress-[0-9].* ru-wordpress-[0-9].*
 RUN_DEPENDS=	${PECL_PKGNAMEPREFIX}imagick>=2.2.2:graphics/pecl-imagick@${PHP_FLAVOR}
-RUN_DEPENDS+=	${LOCALBASE}/lib/php/${PHP_EXT_DIR}/redis.so:databases/pecl-redis@${PHP_FLAVOR}
+RUN_DEPENDS+=	${LOCALBASE}/lib/php/${PHP_EXT_DIR}/redis.so:databases/php-redis@${PHP_FLAVOR}
 
 NO_ARCH=	yes
 NO_BUILD=	yes

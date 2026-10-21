@@ -1,5 +1,6 @@
 PORTNAME=	roundcube
 DISTVERSION=	1.7.5
+PORTREVISION=	1
 PORTEPOCH=	1
 CATEGORIES?=	mail www
 MASTER_SITES=	https://github.com/roundcube/roundcubemail/releases/download/${DISTVERSION}/
@@ -27,7 +28,7 @@ CPE_PRODUCT=	webmail
 CPE_VENDOR=	roundcube
 
 USE_PHP=	ctype dom exif fileinfo filter iconv intl json mbstring opcache openssl pcre redis session xml zip
-RUN_DEPENDS+=	${LOCALBASE}/lib/php/${PHP_EXT_DIR}/redis.so:databases/pecl-redis@${PHP_FLAVOR}
+RUN_DEPENDS+=	${LOCALBASE}/lib/php/${PHP_EXT_DIR}/redis.so:databases/php-redis@${PHP_FLAVOR}
 RUN_DEPENDS+=	${LOCALBASE}/lib/php/${PHP_EXT_DIR}/apcu.so:devel/pecl-APCu@${PHP_FLAVOR}
 
 OPTIONS_DEFINE=	LDAP GD PSPELL NSC DOCS EXAMPLES
