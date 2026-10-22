@@ -28,20 +28,11 @@ stage_port()
 	    < "${PATCHDIR}/${patchfile}"
 }
 
-stage_port www/nginx nginx.patch
-stage_port www/nginx-devel nginx-devel.patch
 stage_port dns/bind920 bind920.patch
 
-rm -f \
-    "${tmp}/www/nginx/files/extra-patch-ngx_http_auth_ldap_module.c" \
-    "${tmp}/www/nginx-devel/files/extra-patch-ngx_http_auth_ldap_module.c"
-
-for origin in www/nginx www/nginx-devel dns/bind920
-do
-	rsync -a --delete \
-	    "${tmp}/${origin}/" \
-	    "${OVERLAY}/${origin}/"
-done
+rsync -a --delete \
+    "${tmp}/dns/bind920/" \
+    "${OVERLAY}/dns/bind920/"
 
 git -C "$OVERLAY" diff --check
 git -C "$OVERLAY" status --short
