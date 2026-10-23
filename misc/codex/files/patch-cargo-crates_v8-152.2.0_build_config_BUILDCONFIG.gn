@@ -43,3 +43,15 @@
  is_mac = current_os == "mac"
  is_wasm = current_os == "emscripten"
  is_watchos = current_os == "watchos"
+@@ -627,3 +638,4 @@
+-      if (!defined(generate_modulemap)) {
++      # The GN version in BSD ports does not support modulemap generation.
++      if (!is_bsd && !defined(generate_modulemap)) {
+         generate_modulemap = default_modulemap_mode
+       }
+@@ -757,3 +769,4 @@
+-      if (!defined(generate_modulemap)) {
++      # The GN version in BSD ports does not support modulemap generation.
++      if (!is_bsd && !defined(generate_modulemap)) {
+         generate_modulemap = default_modulemap_mode
+       }
