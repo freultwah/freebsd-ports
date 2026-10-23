@@ -1,7 +1,7 @@
 
 PORTNAME=			${SAMBA4_BASENAME}425
 PORTVERSION=			${SAMBA4_VERSION}
-PORTREVISION=			3
+PORTREVISION=			0
 CATEGORIES?=			net
 MASTER_SITES=			SAMBA/samba/stable SAMBA/samba/rc
 DISTNAME=			${SAMBA4_DISTNAME}
@@ -45,7 +45,7 @@ EXTRA_PATCHES=			\
 
 SAMBA4_BASENAME=		samba
 SAMBA4_PORTNAME=		${SAMBA4_BASENAME}4
-SAMBA4_VERSION=			4.25.0
+SAMBA4_VERSION=			4.25.1
 SAMBA4_DISTNAME=		${SAMBA4_BASENAME}-${SAMBA4_VERSION:S|.p|pre|:S|.r|rc|:S|.t|tp|:S|.a|alpha|}
 
 WRKSRC?=			${WRKDIR}/${DISTNAME}
@@ -92,7 +92,7 @@ CONFIGURE_ENV=			PTHREAD_LDFLAGS="-lpthread" \
 				PYTHONHASHSEED=1
 MAKE_ENV=			PYTHONHASHSEED=1
 
-USES=				compiler:c++11-lang iconv localbase:ldflags \
+USES+=				compiler:c++11-lang iconv localbase:ldflags \
 				perl5 pkgconfig shebangfix waf gettext-runtime \
 				inotify
 USE_PERL5=			build
