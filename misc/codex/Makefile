@@ -68,7 +68,12 @@ CARGO_ENV=		OPENSSL_NO_VENDOR=1 \
 			NINJA=${NINJA_CMD} \
 			CLANG_BASE_PATH=${LLVM_PREFIX}
 
-BINARY_ALIAS=	python3=${PYTHON_CMD}
+BINARY_ALIAS=	python3=${PYTHON_CMD} \
+		cpp=${LOCALBASE}/bin/clang-cpp${LLVM_VERSION} \
+		cc=${LOCALBASE}/bin/clang${LLVM_VERSION} \
+		c++=${LOCALBASE}/bin/clang++${LLVM_VERSION} \
+		ar=${LOCALBASE}/bin/llvm-ar${LLVM_VERSION} \
+		nm=${LOCALBASE}/bin/llvm-nm${LLVM_VERSION}
 PORTSCOUT=	limit:^rust-v[0-9]\.
 
 BUILD_WRKSRC=	${WRKSRC}/codex-rs
