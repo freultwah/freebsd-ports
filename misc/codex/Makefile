@@ -1,6 +1,6 @@
 PORTNAME=	codex
 DISTVERSIONPREFIX=	rust-v
-DISTVERSION=	0.163.0
+DISTVERSION=	0.164.0
 PORTREVISION=	0
 CATEGORIES=	misc devel
 
@@ -26,11 +26,8 @@ RUN_DEPENDS=	bash:shells/bash \
 		rg:textproc/ripgrep
 TEST_DEPENDS=	bash:shells/bash
 
-USES=		cargo dos2unix gnome llvm:min=21 ninja:build python:test \
+USES=		cargo gnome llvm:min=21 ninja:build python:test \
 		shebangfix ssl
-
-DOS2UNIX_WRKSRC=${WRKSRC_crate_mxc_telemetry}
-DOS2UNIX_REGEX=	.*/Cargo\.toml
 
 # crates.io requires a Cargo user agent for crate downloads.
 FETCH_BEFORE_ARGS+=	--user-agent=cargo
