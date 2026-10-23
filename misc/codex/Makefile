@@ -95,6 +95,8 @@ post-extract:
 		${WRKSRC_crate_v8}/third_party/icu/common
 
 post-patch:
+	@${PATCH} ${PATCH_ARGS} -d ${WRKSRC_crate_mxc-sdk} < \
+		${FILESDIR}/extra-patch-mxc-sdk-dispatch
 	@${REINPLACE_CMD} -e 's|/bin/bash|${LOCALBASE}&|' \
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/environment_info.rs \
 		${BUILD_WRKSRC}/cli/src/debug_sandbox/pid_tracker.rs \
