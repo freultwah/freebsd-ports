@@ -1,7 +1,7 @@
 
 PORTNAME=			${SAMBA4_BASENAME}425
 PORTVERSION=			${SAMBA4_VERSION}
-PORTREVISION=			0
+PORTREVISION=			1
 CATEGORIES?=			net
 MASTER_SITES=			SAMBA/samba/stable SAMBA/samba/rc
 DISTNAME=			${SAMBA4_DISTNAME}
@@ -119,6 +119,9 @@ OPTIONS_DEFINE=			AD_DC ADS CLUSTER CUPS DOCS LDAP GPGME \
 OPTIONS_GROUP=			VFS
 OPTIONS_GROUP_VFS=		FRUIT GLUSTERFS
 
+OPTIONS_RADIO=			LMDBG1
+OPTIONS_RADIO_LMDBG1=		LMDB0 LMDB1
+
 OPTIONS_SINGLE=			GSSAPI ZEROCONF
 
 OPTIONS_SINGLE_GSSAPI=		GSSAPI_BUILTIN GSSAPI_MIT
@@ -128,7 +131,7 @@ OPTIONS_SINGLE_ZEROCONF=	ZEROCONF_NONE AVAHI MDNSRESPONDER
 # Make those default options
 OPTIONS_DEFAULT=		AD_DC ADS DOCS LDAP MANPAGES \
 				PROFILE PYTHON3 QUOTAS SYSLOG UTMP \
-				FRUIT GSSAPI_BUILTIN AVAHI
+				FRUIT GSSAPI_BUILTIN AVAHI LMDB0
 ##############################################################################
 ADS_DESC=			Active Directory client
 AD_DC_DESC=			Active Directory Domain Controller(implies PYTHON3)
@@ -137,6 +140,9 @@ DEVELOPER_DESC=			With developer framework
 GPGME_DESC=			GpgME support
 LDAP_DESC=			LDAP client
 LIBZFS_DESC=			LibZFS
+LMDB0_DESC=			Use LMDB 0.9 library
+LMDB1_DESC=			Use LMDB 1.0 library
+LMDBG1_DESC=			LMDB version to use
 SMB1_DESC=			SMB1 protocol support
 MEMORY_DEBUG_DESC=		Debug memory allocator
 PICKY_DEVELOPER_DESC=		Treat compiler warnings as errors(implies DEVELOPER)
@@ -210,38 +216,39 @@ SUB_LIST+=			SAMBA4_BUNDLED_CMOCKA="@comment "
 # talloc
 .if defined(SAMBA4_BUNDLED_TALLOC) && ${SAMBA4_BUNDLED_TALLOC} == yes
 SAMBA4_BUNDLED_LIBS+=		talloc
+CONFLICTS_INSTALL+=		talloc-* talloc2*
 PLIST_SUB+=			SAMBA4_BUNDLED_TALLOC=""
 SUB_LIST+=			SAMBA4_BUNDLED_TALLOC=""
 .else
 SAMBA4_BUNDLED_LIBS+=		!talloc
-BUILD_DEPENDS+=			talloc243>=2.4.3:devel/talloc243
-RUN_DEPENDS+=			talloc243>=2.4.3:devel/talloc243
+BUILD_DEPENDS+=			talloc250>=2.5.0:devel/talloc250
+RUN_DEPENDS+=			talloc250>=2.5.0:devel/talloc250
 PLIST_SUB+=			SAMBA4_BUNDLED_TALLOC="@comment "
 SUB_LIST+=			SAMBA4_BUNDLED_TALLOC="@comment "
 .endif
 # tevent
 .if defined(SAMBA4_BUNDLED_TEVENT) && ${SAMBA4_BUNDLED_TEVENT} == yes
 SAMBA4_BUNDLED_LIBS+=		tevent
-CONFLICTS_INSTALL+=		tevent-* tevent1-*
+CONFLICTS_INSTALL+=		tevent-* tevent0*
 PLIST_SUB+=			SAMBA4_BUNDLED_TEVENT=""
 SUB_LIST+=			SAMBA4_BUNDLED_TEVENT=""
 .else
 SAMBA4_BUNDLED_LIBS+=		!tevent
-BUILD_DEPENDS+=			tevent017>=0.17:devel/tevent017
-RUN_DEPENDS+=			tevent017>=0.17:devel/tevent017
+BUILD_DEPENDS+=			tevent0172>=0.17.2:devel/tevent0172
+RUN_DEPENDS+=			tevent0172>=0.17.2:devel/tevent0172
 PLIST_SUB+=			SAMBA4_BUNDLED_TEVENT="@comment "
 SUB_LIST+=			SAMBA4_BUNDLED_TEVENT="@comment "
 .endif
 # tdb
 .if defined(SAMBA4_BUNDLED_TDB) && ${SAMBA4_BUNDLED_TDB} == yes
 SAMBA4_BUNDLED_LIBS+=		tdb
-CONFLICTS_INSTALL+=		tdb-* tdb1-*
+CONFLICTS_INSTALL+=		tdb-* tdb1*
 PLIST_SUB+=			SAMBA4_BUNDLED_TDB=""
 SUB_LIST+=			SAMBA4_BUNDLED_TDB=""
 .else
 SAMBA4_BUNDLED_LIBS+=		!tdb
-BUILD_DEPENDS+=			tdb1413>=1.4.13:databases/tdb1413
-RUN_DEPENDS+=			tdb1413>=1.4.13:databases/tdb1413
+BUILD_DEPENDS+=			tdb1415>=1.4.15:databases/tdb1415
+RUN_DEPENDS+=			tdb1415>=1.4.15:databases/tdb1415
 PLIST_SUB+=			SAMBA4_BUNDLED_TDB="@comment "
 SUB_LIST+=			SAMBA4_BUNDLED_TDB="@comment "
 .endif
@@ -519,7 +526,17 @@ DEBUG_FLAGS?=			-g -ggdb3 -O0
 .if ${ARCH} != armv6 && ${ARCH} != armv7 && ${ARCH} != i386 && ${ARCH} != mips && ${ARCH} != powerpc && ${ARCH} != powerpcspe
 .	if defined(SAMBA4_BUNDLED_LDB) && ${SAMBA4_BUNDLED_LDB} == yes && (${PORT_OPTIONS:MAD_DC} || ${PORT_OPTIONS:MDEVELOPER})
 # LMDB
-SAMBA4_LMDB_DEPENDS=		lmdb>=0.9.16:databases/lmdb
+.		if ${PORT_OPTIONS:MLMDB1}
+SAMBA4_LMDB_DEPENDS=		lmdb>=1.0:databases/lmdb
+CFLAGS+=			-I${LOCALBASE}/include
+LDFLAGS+=			-L${LOCALBASE}/lib
+CONFIGURE_ENV+=			PKG_CONFIG_PATH=${LOCALBASE}/libdata/pkgconfig
+.		else
+SAMBA4_LMDB_DEPENDS=		lmdb0>=0.9.16:databases/lmdb0
+CFLAGS+=			-I${LOCALBASE}/lmdb0/include
+LDFLAGS+=			-L${LOCALBASE}/lmdb0/lib
+CONFIGURE_ENV+=			PKG_CONFIG_PATH=${LOCALBASE}/lmdb0/libdata/pkgconfig
+.		endif
 PLIST_FILES+=			${SAMBA4_LIBDIR}/private/libldb-mdb-int-private-samba.so \
 				${SAMBA4_MODULEDIR}/ldb/mdb.so
 .	endif
