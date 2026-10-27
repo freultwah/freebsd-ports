@@ -2,7 +2,7 @@
 # $FreeBSD$
 
 PORTNAME=	rutorrent5
-DISTVERSION=	5.3.18
+DISTVERSION=	5.3.19
 DISTVERSIONPREFIX=v
 PORTREVISION=	0
 CATEGORIES=	www
@@ -26,9 +26,7 @@ USE_GITHUB=	yes
 PORTEXAMPLES=	rutorrent.conf
 SUB_FILES=	pkg-message
 GH_ACCOUNT=	Novik
-#GH_ACCOUNT=	freultwah
 GH_PROJECT=	ruTorrent
-#GH_TAGNAME=     9ee6a72
 
 
 USE_PHP=	bcmath curl filter json mbstring opcache openssl posix session sockets zlib
