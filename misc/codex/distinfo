@@ -1,4 +1,4 @@
-TIMESTAMP = 1793189854
+TIMESTAMP = 1793339874
 SHA256 (rust/crates/Inflector-0.11.4.crate) = fe438c63458706e03479442743baae6c88256498e6431708f6dfc520a26515d3
 SIZE (rust/crates/Inflector-0.11.4.crate) = 17438
 SHA256 (rust/crates/addr2line-0.25.1.crate) = 1b5d307320b3181d6d7954e663bd7c774a838b8220fe0593c86d9fb09f498b4b
@@ -2609,5 +2609,5 @@ SHA256 (modelcontextprotocol-rust-sdk-98a54789b80110ad210495c4ad845c89e1980471_G
 SIZE (modelcontextprotocol-rust-sdk-98a54789b80110ad210495c4ad845c89e1980471_GH0.tar.gz) = 763437
 SHA256 (hyperium-h3-e07e69412876f7e26f026bd75a48b2704d8c8283_GH0.tar.gz) = 3b9d8a9d10841fe27fb86c97a06bece1411fcb0acfadc0ca857b6365d4e5d29a
 SIZE (hyperium-h3-e07e69412876f7e26f026bd75a48b2704d8c8283_GH0.tar.gz) = 244832
-SHA256 (openai-codex-rust-v0.165.0_GH0.tar.gz) = 4e066a7dbd1234efa7458c2b137161bb7ddde1dde6be4ed4c8f38e6c45f862ab
-SIZE (openai-codex-rust-v0.165.0_GH0.tar.gz) = 18351429
+SHA256 (openai-codex-rust-v0.166.0_GH0.tar.gz) = 718c86dcd7104919f2820aa79db0fa0083b5f240aa16da704f43e4acf7b544e5
+SIZE (openai-codex-rust-v0.166.0_GH0.tar.gz) = 18852337
