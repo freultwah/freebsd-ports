@@ -1,0 +1,13 @@
+--- bin/sbt.orig
++++ bin/sbt
+@@ -12,7 +12,9 @@
+ declare -a print_sbt_script_version
+ declare -a shutdownall
+ declare -a original_args
+-declare java_cmd=java
++: "${JAVA_HOME:=%%JAVA_HOME%%}"
++export JAVA_HOME
++declare java_cmd="${JAVA_HOME}/bin/java"
+ declare java_version
+ declare init_sbt_version=2.0.9
+ declare sbt_default_mem=1024
