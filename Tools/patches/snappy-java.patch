@@ -1,0 +1,22 @@
+--- Makefile
++++ Makefile
+@@ -21,9 +21,17 @@
+ 
+ LICENSE=	APACHE20
+ 
+-BUILD_DEPENDS=	sbt:devel/sbt
++BUILD_DEPENDS=	sbt:devel/sbt \
++		openjdk25-headless>0:java/openjdk25@headless
+ 
+-USES=		cmake:indirect gmake java:build
++USES=		cmake:indirect gmake
++
++JAVA_HOME=	${LOCALBASE}/openjdk25-headless
++JAVA=		${JAVA_HOME}/bin/java
++JAVAC=		${JAVA_HOME}/bin/javac
++JAVAJARDIR=	${PREFIX}/share/java/classes
++MAKE_ENV+=	JAVA=${JAVA} JAVAC=${JAVAC} \
++		PATH=${JAVA_HOME}/bin:${PATH}
+ 
+ USE_GITHUB=	yes
+ GH_ACCOUNT=	xerial

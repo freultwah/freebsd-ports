@@ -19,7 +19,7 @@ stage_port()
 
 	mkdir -p "${tmp}/${origin%/*}"
 
-	rsync -a --delete \
+	rsync -a --delete --exclude '/work*' --exclude '/.git' \
 	    "${PORTS}/${origin}/" \
 	    "${tmp}/${origin}/"
 
@@ -28,13 +28,46 @@ stage_port()
 	    < "${PATCHDIR}/${patchfile}"
 }
 
+# Headless variants retain one revision above the corresponding main-tree port.
+# Keep revision handling separate from patches so release/revision changes do
+# not make the local dependency patches fail.
+stage_headless_port()
+{
+	stage_port "$1" "$2"
+	revision=$(make -C "${PORTS}/${origin}" -V PORTREVISION)
+	revision=${revision:-0}
+	awk -v revision="$((revision + 1))" '
+	    /^PORTREVISION[?+:]?=/ { next }
+	    { print }
+	    /^(PORTVERSION|DISTVERSION)[?+:]?=/ { printf "PORTREVISION=\t%s\n", revision }
+	' "${tmp}/${origin}/Makefile" > "${tmp}/Makefile"
+	mv "${tmp}/Makefile" "${tmp}/${origin}/Makefile"
+
+	candidate=$(make -C "${tmp}/${origin}" -V PKGVERSION)
+	current=$(make -C "${OVERLAY}/${origin}" -V PKGVERSION)
+	if [ "$(pkg version -t "$candidate" "$current")" = '<' ]; then
+		printf 'Keeping %s %s (main-tree derivative is older: %s)\n' \
+		    "$origin" "$current" "$candidate"
+	else
+		refresh="$refresh $origin"
+	fi
+}
+
+refresh=dns/bind920
 stage_port dns/bind920 bind920.patch
+stage_headless_port net-mgmt/unifi10 unifi10.patch
+stage_headless_port archivers/snappy-java snappy-java.patch
+stage_headless_port devel/sbt sbt.patch
 
-rsync -a --delete \
-    "${tmp}/dns/bind920/" \
-    "${OVERLAY}/dns/bind920/"
+# Publish only after all ports have been staged successfully. Preserve any
+# generated work directories already present in the overlay.
+for origin in $refresh; do
+	rsync -a --delete --exclude '/work*' --exclude '/.git' \
+	    "${tmp}/${origin}/" "${OVERLAY}/${origin}/"
+done
 
-git -C "$OVERLAY" diff --check
+# Unified-diff context contains significant whitespace.
+git -C "$OVERLAY" diff --check -- ':!**/files/patch-*' ':!Tools/patches/*'
 git -C "$OVERLAY" status --short
 
 printf 'Refreshed from FreeBSD ports commit %s\n' \
