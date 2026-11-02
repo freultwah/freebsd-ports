@@ -3,6 +3,10 @@
 # PROVIDE: stalwart
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
+#
+# Set stalwart_recovery_bind to an IP assigned to this host or jail to bind
+# the initial setup/recovery HTTP listener to that address (IPv4 or IPv6).
+# When unset, Stalwart uses its default wildcard address.
 
 . /etc/rc.subr
 
@@ -17,6 +21,7 @@ load_rc_config stalwart
 : ${stalwart_config:="%%ETCDIR%%/config.json"}
 : ${stalwart_log:="/var/log/stalwart.log"}
 : ${stalwart_path:="/var/db/stalwart"}
+: ${stalwart_recovery_bind:=""}
 
 pidfile="/var/run/stalwart/server.pid"
 procname="%%LOCALBASE%%/bin/stalwart"
@@ -24,6 +29,10 @@ start_cmd="stalwart_start"
 start_precmd="stalwart_prestart"
 
 stalwart_env="STALWART_PATH=${stalwart_path} RUN_AS_USER=${stalwart_user} RUN_AS_GROUP=${stalwart_group}"
+
+if [ -n "${stalwart_recovery_bind}" ]; then
+    export STALWART_RECOVERY_MODE_BIND="${stalwart_recovery_bind}"
+fi
 
 stalwart_prestart() {
     if [ ! -f "${stalwart_log}" ]; then
