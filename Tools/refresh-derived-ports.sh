@@ -28,43 +28,19 @@ stage_port()
 	    < "${PATCHDIR}/${patchfile}"
 }
 
-# Headless variants retain one revision above the corresponding main-tree port.
-# Keep revision handling separate from patches so release/revision changes do
-# not make the local dependency patches fail.
-stage_headless_port()
-{
-	stage_port "$1" "$2"
-	revision=$(make -C "${PORTS}/${origin}" -V PORTREVISION)
-	revision=${revision:-0}
-	awk -v revision="$((revision + 1))" '
-	    /^PORTREVISION[?+:]?=/ { next }
-	    { print }
-	    /^(PORTVERSION|DISTVERSION)[?+:]?=/ { printf "PORTREVISION=\t%s\n", revision }
-	' "${tmp}/${origin}/Makefile" > "${tmp}/Makefile"
-	mv "${tmp}/Makefile" "${tmp}/${origin}/Makefile"
-
-	candidate=$(make -C "${tmp}/${origin}" -V PKGVERSION)
-	current=$(make -C "${OVERLAY}/${origin}" -V PKGVERSION)
-	if [ "$(pkg version -t "$candidate" "$current")" = '<' ]; then
-		printf 'Keeping %s %s (main-tree derivative is older: %s)\n' \
-		    "$origin" "$current" "$candidate"
-	else
-		refresh="$refresh $origin"
-	fi
-}
-
-refresh=dns/bind920
 stage_port dns/bind920 bind920.patch
-stage_headless_port net-mgmt/unifi10 unifi10.patch
-stage_headless_port archivers/snappy-java snappy-java.patch
-stage_headless_port devel/sbt sbt.patch
 
-# Publish only after all ports have been staged successfully. Preserve any
-# generated work directories already present in the overlay.
-for origin in $refresh; do
-	rsync -a --delete --exclude '/work*' --exclude '/.git' \
-	    "${tmp}/${origin}/" "${OVERLAY}/${origin}/"
-done
+# Keep the Java framework synchronized with main, applying the overlay policy
+# before publishing either the framework or bind920.
+mkdir -p "${tmp}/Mk/Uses"
+cp "${PORTS}/Mk/Uses/java.mk" "${tmp}/Mk/Uses/java.mk"
+patch -d "$tmp" -p0 -t -s -F 0 -V none \
+    < "${PATCHDIR}/java.mk.patch"
+
+rsync -a --delete --exclude '/work*' --exclude '/.git' \
+    "${tmp}/dns/bind920/" "${OVERLAY}/dns/bind920/"
+mkdir -p "${OVERLAY}/Mk/Uses"
+cp "${tmp}/Mk/Uses/java.mk" "${OVERLAY}/Mk/Uses/java.mk"
 
 # Unified-diff context contains significant whitespace.
 git -C "$OVERLAY" diff --check -- ':!**/files/patch-*' ':!Tools/patches/*'

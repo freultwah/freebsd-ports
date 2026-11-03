@@ -1,0 +1,17 @@
+--- Mk/Uses/java.mk
++++ Mk/Uses/java.mk
+@@ -220,11 +220,11 @@
+ 											VERSION=17	OS=native	VENDOR=openjdk
+ _JAVA_PORT_NATIVE_OPENJDK_JDK_21_INFO=		PORT=java/openjdk21			HOME=${LOCALBASE}/openjdk21 \
+ 											VERSION=21	OS=native	VENDOR=openjdk
+-_JAVA_PORT_NATIVE_OPENJDK_JDK_25_INFO=		PORT=java/openjdk25			HOME=${LOCALBASE}/openjdk25 \
++_JAVA_PORT_NATIVE_OPENJDK_JDK_25_INFO=		PORT=java/openjdk25@headless			HOME=${LOCALBASE}/openjdk25-headless \
+ 											VERSION=25	OS=native	VENDOR=openjdk
+-_JAVA_PORT_NATIVE_OPENJDK_JDK_26_INFO=		PORT=java/openjdk26			HOME=${LOCALBASE}/openjdk26 \
++_JAVA_PORT_NATIVE_OPENJDK_JDK_26_INFO=		PORT=java/openjdk26@headless			HOME=${LOCALBASE}/openjdk26-headless \
+ 											VERSION=26	OS=native	VENDOR=openjdk
+-_JAVA_PORT_NATIVE_OPENJDK_JDK_27_INFO=		PORT=java/openjdk27			HOME=${LOCALBASE}/openjdk27 \
++_JAVA_PORT_NATIVE_OPENJDK_JDK_27_INFO=		PORT=java/openjdk27@headless			HOME=${LOCALBASE}/openjdk27-headless \
+ 											VERSION=27	OS=native	VENDOR=openjdk
+ _JAVA_PORT_LINUX_ORACLE_JDK_8_INFO=		PORT=java/linux-oracle-jdk18	HOME=${LOCALBASE}/linux-oracle-jdk1.8.0 \
+ 											VERSION=8	OS=linux	VENDOR=oracle
