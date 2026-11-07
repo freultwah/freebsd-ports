@@ -17,23 +17,7 @@ LICENSE=	APACHE20
 
 RUN_DEPENDS=	bash:shells/bash
 
-BUILD_DEPENDS+=	openjdk25-headless>0:java/openjdk25@headless
-RUN_DEPENDS+=	openjdk25-headless>0:java/openjdk25@headless
-
-JAVA_PORT=	java/openjdk25
-JAVA_HOME=	${LOCALBASE}/openjdk25
-JAVA=		${JAVA_HOME}/bin/java
-JAVAC=		${JAVA_HOME}/bin/javac
-JAR=		${JAVA_HOME}/bin/jar
-
-SUB_LIST+=	TIKA_JAVA_HOME=${JAVA_HOME}
-
-MAKE_ENV+=	JAVA_HOME=${JAVA_HOME}
-MAKE_ENV+=	JAVA=${JAVA}
-MAKE_ENV+=	JAVAC=${JAVAC}
-MAKE_ENV+=	JAR=${JAR}
-
-USES=		cpe zip
+USES=		cpe java zip
 CPE_VENDOR=	apache
 CPE_PRODUCT=	tika
 JAVA_VERSION=	21+
@@ -45,9 +29,6 @@ SUB_FILES=	pkg-message
 USE_RC_SUBR=	tika
 USERS=		tika
 GROUPS=		${USERS}
-
-#UID_FILES?=	${PORTSDIR}/UIDs ${OVERLAYS}/UIDs
-#GID_FILES?=	${PORTSDIR}/GIDs ${OVERLAYS}/GIDs
 
 .if exists(${OVERLAYS}/UIDs)
 UID_FILES?=     ${OVERLAYS}/UIDs ${PORTSDIR}/UIDs
