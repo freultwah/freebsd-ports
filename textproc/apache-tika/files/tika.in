@@ -77,7 +77,7 @@ tika_find_pids()
 		_host_re="( -h [^ ]+)?"
 	fi
 
-	_match=$(pgrep -f "java .*tika-server\\.jar .* -p ${tika_port}${_host_re}|java .*org\\.apache\\.tika\\.server\\.core\\.TikaServerProcess .* -p ${tika_port}${_host_re}")
+	_match=$(pgrep -f "java .*tika-server-standard-[^[:space:]]+\\.jar.* -p ${tika_port}${_host_re}|java .*org\\.apache\\.tika\\.server\\.core\\.TikaServerProcess.* -p ${tika_port}${_host_re}")
 	if [ -n "${_match}" ]; then
 		echo "${_match}" | tr '\n' ' ' | sed 's/[[:space:]]*$//'
 	fi
@@ -87,7 +87,7 @@ tika_update_pidfile()
 {
 	local _pid
 
-	_pid=$(pgrep -f "java .*tika-server\\.jar .* -p ${tika_port}" | head -n 1)
+	_pid=$(pgrep -f "java .*tika-server-standard-[^[:space:]]+\\.jar.* -p ${tika_port}" | head -n 1)
 	if [ -n "${_pid}" ]; then
 		echo "${_pid}" > "${pidfile}"
 		chown "${tika_user}:${tika_group}" "${pidfile}" 2>/dev/null || true

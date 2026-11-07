@@ -42,9 +42,6 @@ GID_FILES?=     ${OVERLAYS}/GIDs ${PORTSDIR}/GIDs
 GID_FILES?=     /root/ports/LOCAL/GIDs ${PORTSDIR}/GIDs
 .endif
 
-CPE_PRODUCT=	tika
-CPE_VENDOR=	apache
-
 do-install:
 	${FIND} ${WRKSRC} -name '*.orig' -delete
 	cd ${WRKSRC} && ${COPYTREE_SHARE} . ${STAGEDIR}${PREFIX}/${CPE_PRODUCT}
