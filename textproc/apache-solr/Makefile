@@ -1,6 +1,5 @@
 PORTNAME=	apache-solr
 PORTVERSION=	10.1.0
-PORTREVISION=	0
 PORTEPOCH=	1
 CATEGORIES=	textproc java
 MASTER_SITES=	https://archive.apache.org/dist/solr/solr/${PORTVERSION}/
@@ -14,24 +13,7 @@ LICENSE=	APACHE20
 
 RUN_DEPENDS=	bash:shells/bash
 
-BUILD_DEPENDS+=	openjdk25-headless>0:java/openjdk25@headless
-RUN_DEPENDS+=	openjdk25-headless>0:java/openjdk25@headless
-
-JAVA_PORT=	java/openjdk25
-JAVA_HOME=	${LOCALBASE}/openjdk25
-JAVA=		${JAVA_HOME}/bin/java
-JAVAC=		${JAVA_HOME}/bin/javac
-JAR=		${JAVA_HOME}/bin/jar
-
-SUB_LIST+=	SOLR_JAVA_HOME=${JAVA_HOME}
-
-MAKE_ENV+=	JAVA_HOME=${JAVA_HOME}
-MAKE_ENV+=	JAVA=${JAVA}
-MAKE_ENV+=	JAVAC=${JAVAC}
-MAKE_ENV+=	JAR=${JAR}
-
-#USES=		cpe java tar:tgz
-USES=		cpe tar:tgz
+USES=		cpe java tar:tgz
 CPE_VENDOR=	apache
 CPE_PRODUCT=	solr
 JAVA_VERSION=	21+
@@ -81,6 +63,10 @@ post-install:
 		${SED} -e 's#^${STAGEDIR}${PREFIX}/##' >> ${TMPPLIST}
 	@${ECHO_CMD} "@dir solr/server/solr-webapp/webapp/ui/composeResources/com.arkivanov.decompose.extensions_compose.generated.resources" >> ${TMPPLIST}
 	@${ECHO_CMD} "@dir solr/server/solr-webapp/webapp/ui/composeResources/components.resources.library.generated.resources" >> ${TMPPLIST}
+	@${ECHO_CMD} "@dir solr/server/solr-webapp/webapp/ui/composeResources/solr_ui.webapp.generated.resources" >> ${TMPPLIST}
+	@${ECHO_CMD} "@dir solr/server/solr-webapp/webapp/WEB-INF/classes/composeResources/com.arkivanov.decompose.extensions_compose.generated.resources" >> ${TMPPLIST}
+	@${ECHO_CMD} "@dir solr/server/solr-webapp/webapp/WEB-INF/classes/composeResources/components.resources.library.generated.resources" >> ${TMPPLIST}
+	@${ECHO_CMD} "@dir solr/server/solr-webapp/webapp/WEB-INF/classes/composeResources/solr_ui.webapp.generated.resources" >> ${TMPPLIST}
 	@${ECHO_CMD} "@dir(solr,solr) /var/db/solr" >> ${TMPPLIST}
 	@${ECHO_CMD} "@dir(solr,solr) /var/log/solr" >> ${TMPPLIST}
 	@${ECHO_CMD} "@sample etc/solr.in.sh.sample" >> ${TMPPLIST}
