@@ -1,0 +1,227 @@
+diff --git Cargo.lock Cargo.lock
+index e927c38..05e24b4 100644
+--- Cargo.lock
++++ Cargo.lock
+@@ -4258,6 +4258,7 @@ dependencies = [
+  "rkyv",
+  "rust-stemmers",
+  "serde",
++ "snowball_stemmers_rs",
+  "whatlang",
+  "xxhash-rust",
+ ]
+@@ -6627,6 +6628,16 @@ dependencies = [
+  "zip",
+ ]
+ 
++[[package]]
++name = "snowball_stemmers_rs"
++version = "1.0.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "3c26383fe114fb711181991a326850a36011deb6d9666eb6781404f2fd4093f4"
++dependencies = [
++ "serde",
++ "serde_derive",
++]
++
+ [[package]]
+ name = "socket2"
+ version = "0.5.10"
+diff --git crates/nlp/Cargo.toml crates/nlp/Cargo.toml
+index dcbb49e..531b9d6 100644
+--- crates/nlp/Cargo.toml
++++ crates/nlp/Cargo.toml
+@@ -9,6 +9,7 @@ serde = { version = "1.0", features = ["derive"]}
+ ahash = { version = "0.8.12", features = ["serde"] }
+ whatlang = "0.18" # Language detection
+ rust-stemmers = "1.2" # Stemmers
++snowball_stemmers_rs = "1.0.1" # Estonian stemmer
+ jieba-rs = "0.11" # Chinese stemmer
+ psl = "2"
+ memchr = "2.8"
+diff --git crates/nlp/src/language/stemmer.rs crates/nlp/src/language/stemmer.rs
+index 6ac853c..71bf17c 100644
+--- crates/nlp/src/language/stemmer.rs
++++ crates/nlp/src/language/stemmer.rs
+@@ -20,6 +20,7 @@ pub struct StemmedToken<'x> {
+ 
+ pub struct Stemmer<'x> {
+     stemmer: Option<rust_stemmers::Stemmer>,
++    estonian_stemmer: Option<snowball_stemmers_rs::Stemmer>,
+     tokenizer: LanguageTokenizer<'x>,
+ }
+ 
+@@ -28,6 +29,9 @@ impl<'x> Stemmer<'x> {
+         Stemmer {
+             tokenizer: language.tokenize_text(text, max_token_length),
+             stemmer: STEMMER_MAP[language as usize].map(rust_stemmers::Stemmer::create),
++            estonian_stemmer: (language == Language::Estonian).then(|| {
++                snowball_stemmers_rs::Stemmer::create(snowball_stemmers_rs::Algorithm::Estonian)
++            }),
+         }
+     }
+ }
+@@ -38,14 +42,21 @@ impl<'x> Iterator for Stemmer<'x> {
+     fn next(&mut self) -> Option<Self::Item> {
+         let token = self.tokenizer.next()?;
+         Some(StemmedToken {
+-            stemmed_word: self.stemmer.as_ref().and_then(|stemmer| {
+-                match stemmer.stem(&token.word) {
++            stemmed_word: self
++                .stemmer
++                .as_ref()
++                .map(|stemmer| stemmer.stem(&token.word))
++                .or_else(|| {
++                    self.estonian_stemmer
++                        .as_ref()
++                        .map(|stemmer| stemmer.stem(&token.word))
++                })
++                .and_then(|stemmed_word| match stemmed_word {
+                     Cow::Owned(text) if text.len() != token.word.len() || text != token.word => {
+                         Some(text.into())
+                     }
+                     _ => None,
+-                }
+-            }),
++                }),
+             word: token.word,
+             from: token.from,
+             to: token.to,
+diff --git crates/store/src/backend/postgres/search.rs crates/store/src/backend/postgres/search.rs
+index 95ec62e..54e9f04 100644
+--- crates/store/src/backend/postgres/search.rs
++++ crates/store/src/backend/postgres/search.rs
+@@ -869,6 +869,7 @@ pub(super) const PG_LANGS: &[&str] = &[
+     "danish",
+     "dutch",
+     "english",
++    "estonian",
+     "finnish",
+     "french",
+     "german",
+@@ -935,7 +936,7 @@ fn pg_lang(lang: &Language) -> Option<&'static str> {
+         Language::Macedonian => None,
+         Language::Lithuanian => Some("lithuanian"),
+         Language::Latvian => None,
+-        Language::Estonian => None,
++        Language::Estonian => Some("estonian"),
+         Language::Tamil => Some("tamil"),
+         Language::Vietnamese => None,
+         Language::Urdu => None,
+--- /dev/null	2026-11-09 19:30:25.443142000 +0000
++++ crates/nlp/tests/estonian_stemming.rs	2026-11-09 19:08:26.310137000 +0000
+@@ -0,0 +1,43 @@
++/*
++ * SPDX-FileCopyrightText: 2026 Stalwart Labs LLC <hello@stalw.art>
++ *
++ * SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-SEL
++ */
++
++use nlp::language::{Language, stemmer::Stemmer};
++
++#[test]
++fn estonian_stems_and_token_offsets() {
++    let text = "RAAMATUD, raamatutes; majades õpilastega ja";
++    let tokens = Stemmer::new(text, Language::Estonian, 200).collect::<Vec<_>>();
++    for (token, (word, stem)) in tokens.iter().zip([
++        ("raamatud", Some("raama")),
++        ("raamatutes", Some("raama")),
++        ("majades", Some("maja")),
++        ("õpilastega", Some("õpilase")),
++        ("ja", None),
++    ]) {
++        assert_eq!(token.word, word);
++        assert_eq!(token.stemmed_word.as_deref(), stem);
++        assert_eq!(text[token.from..token.to].to_lowercase(), word);
++    }
++    assert_eq!(tokens.len(), 5);
++    assert_eq!(Stemmer::new(text, Language::Estonian, 2).count(), 1);
++}
++
++#[test]
++fn other_languages_keep_existing_stemming() {
++    for (code, word, stem) in [
++        ("en", "running", Some("run")),
++        ("de", "häusern", Some("haus")),
++        ("fi", "talossa", Some("talo")),
++        ("pl", "samochodami", None),
++        ("eo", "libroj", None),
++    ] {
++        let token = Stemmer::new(word, Language::from_iso_639(code).unwrap(), 200)
++            .next()
++            .unwrap();
++        assert_eq!(token.word, word);
++        assert_eq!(token.stemmed_word.as_deref(), stem, "{code}");
++    }
++}
+--- /dev/null	2026-11-09 19:30:25.462289000 +0000
++++ crates/store/tests/estonian_search.rs	2026-11-09 19:08:26.310297000 +0000
+@@ -0,0 +1,68 @@
++/*
++ * SPDX-FileCopyrightText: 2026 Stalwart Labs LLC <hello@stalw.art>
++ *
++ * SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-SEL
++ */
++
++#![cfg(feature = "sqlite")]
++
++use nlp::language::Language;
++use store::{
++    backend::sqlite::SqliteStore,
++    search::{EmailSearchField, IndexDocument, SearchFilter, SearchQuery, TextMatch},
++    write::SearchIndex,
++};
++
++#[tokio::test]
++async fn estonian_index_and_search() {
++    let path = std::env::temp_dir().join(format!("stalwart-estonian-{}", rand::random::<u64>()));
++    std::fs::create_dir(&path).unwrap();
++    let store = SqliteStore::open(registry::schema::structs::SqliteStore {
++        path: path.to_str().unwrap().into(),
++        pool_workers: Some(1),
++        pool_max_connections: Some(1),
++    })
++    .unwrap();
++    store.create_tables().await.unwrap();
++
++    let mut documents = Vec::new();
++    for (id, text) in [(1, "Raamatutes"), (2, "Raamat"), (3, "Majades")] {
++        let mut document = IndexDocument::new(SearchIndex::Email).with_document_id(id);
++        document.index_text(EmailSearchField::Body, text, Language::Estonian);
++        documents.push(document);
++    }
++    store
++        .index_account_documents(0, SearchIndex::Email, documents, Vec::new())
++        .await
++        .unwrap();
++
++    for (value, op, expected) in [
++        ("raamatud", TextMatch::Standard, vec![1, 2]),
++        ("raamat", TextMatch::Standard, vec![1, 2]),
++        ("RAAMATUTES", TextMatch::Standard, vec![1, 2]),
++        ("majadega", TextMatch::Standard, vec![3]),
++        ("maja", TextMatch::Standard, vec![3]),
++        ("kassid", TextMatch::Standard, vec![]),
++        ("raamatud", TextMatch::Exact, vec![]),
++        ("raamatutes", TextMatch::Exact, vec![1]),
++    ] {
++        let query = SearchQuery::new(SearchIndex::Email)
++            .with_account_id(0)
++            .with_mask([1, 2, 3].into_iter().collect())
++            .with_filter(SearchFilter::Text {
++                field: EmailSearchField::Body.into(),
++                op,
++                value: value.into(),
++                language: Language::Estonian,
++            });
++        let results = store.query_account(query).await.unwrap();
++        assert_eq!(
++            results.iter().collect::<Vec<_>>(),
++            expected,
++            "{value} {op:?}"
++        );
++    }
++
++    drop(store);
++    std::fs::remove_dir_all(path).unwrap();
++}

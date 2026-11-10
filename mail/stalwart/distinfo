@@ -1,4 +1,4 @@
-TIMESTAMP = 1794228902
+TIMESTAMP = 1794252958
 SHA256 (rust/crates/adler2-2.0.1.crate) = 320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa
 SIZE (rust/crates/adler2-2.0.1.crate) = 13366
 SHA256 (rust/crates/adler32-1.2.0.crate) = aae1277d39aeec15cb388266ecc24b11c80469deae6067e17a1a7aa9e5c1f234
@@ -1123,6 +1123,8 @@ SHA256 (rust/crates/slab-0.4.12.crate) = 0c790de23124f9ab44544d7ac05d60440adc586
 SIZE (rust/crates/slab-0.4.12.crate) = 19080
 SHA256 (rust/crates/smallvec-1.16.5.crate) = 149309498a5f7334b12ddae0cad8aba81ce785fe91755068867e017cf98fee46
 SIZE (rust/crates/smallvec-1.16.5.crate) = 34819
+SHA256 (rust/crates/snowball_stemmers_rs-1.0.1.crate) = 3c26383fe114fb711181991a326850a36011deb6d9666eb6781404f2fd4093f4
+SIZE (rust/crates/snowball_stemmers_rs-1.0.1.crate) = 179478
 SHA256 (rust/crates/socket2-0.5.10.crate) = e22376abed350d73dd1cd119b57ffccad95b4e585a7cda43e286245ce23c0678
 SIZE (rust/crates/socket2-0.5.10.crate) = 58169
 SHA256 (rust/crates/socket2-0.6.5.crate) = c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4

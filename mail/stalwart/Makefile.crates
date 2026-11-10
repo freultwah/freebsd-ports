@@ -560,6 +560,7 @@ CARGO_CRATES=	adler2-2.0.1 \
 		siphasher-1.0.4 \
 		slab-0.4.12 \
 		smallvec-1.16.5 \
+		snowball_stemmers_rs-1.0.1 \
 		socket2-0.5.10 \
 		socket2-0.6.5 \
 		sonic-number-0.1.3 \
