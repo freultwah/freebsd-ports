@@ -1,6 +1,6 @@
---- cargo-crates/v8-152.2.0/v8/gni/v8.gni.orig	2006-07-24 01:21:28 UTC
+--- cargo-crates/v8-152.2.0/v8/gni/v8.gni.orig
 +++ cargo-crates/v8-152.2.0/v8/gni/v8.gni
-@@ -351,7 +351,7 @@ is_drumbrake_supported =
+@@ -357,7 +357,7 @@
      (v8_current_cpu == "x64" || v8_current_cpu == "arm64" ||
       v8_current_cpu == "riscv64") &&
      (target_os == "win" || target_os == "linux" || target_os == "mac" ||

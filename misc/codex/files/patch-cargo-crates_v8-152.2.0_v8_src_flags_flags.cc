@@ -1,17 +1,17 @@
---- cargo-crates/v8-152.2.0/v8/src/flags/flags.cc.orig	2006-07-24 01:21:28 UTC
+--- cargo-crates/v8-152.2.0/v8/src/flags/flags.cc.orig
 +++ cargo-crates/v8-152.2.0/v8/src/flags/flags.cc
-@@ -17,6 +17,10 @@
- #include <sstream>
+@@ -18,6 +18,10 @@
+ #include <string_view>
  #include <unordered_map>
- 
+ #include <vector>
++
 +#if V8_OS_OPENBSD
 +#include <sys/mman.h>
 +#endif
-+
+ 
  #include "src/base/fpu.h"
  #include "src/base/hashing.h"
- #include "src/base/lazy-instance.h"
-@@ -887,6 +891,10 @@ void FlagList::FreezeFlags() {
+@@ -978,6 +982,10 @@
    // Note that for string flags we only protect the pointer itself, but not the
    // string storage. TODO(12887): Fix this.
    base::OS::SetDataReadOnly(&v8_flags, sizeof(v8_flags));

@@ -1,15 +1,15 @@
---- cargo-crates/v8-152.2.0/third_party/libunwind/src/src/UnwindCursor.hpp.orig	2006-07-24 01:21:28 UTC
+--- cargo-crates/v8-152.2.0/third_party/libunwind/src/src/UnwindCursor.hpp.orig
 +++ cargo-crates/v8-152.2.0/third_party/libunwind/src/src/UnwindCursor.hpp
-@@ -114,6 +114,8 @@ namespace libunwind {
+@@ -113,6 +113,8 @@
+ #endif
  
  namespace libunwind {
- 
-+static thread_local UnwindInfoSectionsCache uwis_cache;
 +
++static thread_local UnwindInfoSectionsCache uwis_cache;
+ 
  #if defined(_LIBUNWIND_SUPPORT_DWARF_UNWIND)
  /// Cache of recently found FDEs.
- template <typename A>
-@@ -2776,7 +2778,14 @@ void UnwindCursor<A, R>::setInfoBasedOnIPRegister(bool
+@@ -2939,7 +2941,14 @@
  
    // Ask address space object to find unwind sections for this pc.
    UnwindInfoSections sects;

@@ -1,6 +1,6 @@
---- cargo-crates/v8-152.2.0/v8/src/sandbox/sandbox.cc.orig	2006-07-24 01:21:28 UTC
+--- cargo-crates/v8-152.2.0/v8/src/sandbox/sandbox.cc.orig
 +++ cargo-crates/v8-152.2.0/v8/src/sandbox/sandbox.cc
-@@ -82,7 +82,7 @@ static Address DetermineAddressSpaceLimit() {
+@@ -273,7 +273,7 @@
    }
  #endif  // V8_TARGET_ARCH_X64
  

@@ -1,6 +1,6 @@
 --- codex-rs/app-server-daemon/src/prepare_install_tests.rs.orig
 +++ codex-rs/app-server-daemon/src/prepare_install_tests.rs
-@@ -373,3 +373,37 @@
+@@ -473,3 +473,37 @@
          PathBuf::from("missing-release")
      );
  }

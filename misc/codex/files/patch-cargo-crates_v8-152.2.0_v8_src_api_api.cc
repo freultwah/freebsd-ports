@@ -1,6 +1,6 @@
---- cargo-crates/v8-152.2.0/v8/src/api/api.cc.orig	2006-07-24 01:21:28 UTC
+--- cargo-crates/v8-152.2.0/v8/src/api/api.cc.orig
 +++ cargo-crates/v8-152.2.0/v8/src/api/api.cc
-@@ -167,7 +167,7 @@
+@@ -175,7 +175,7 @@
  
  #include "src/strings/string-hasher-inl.h"
  
@@ -9,7 +9,7 @@
  #include <signal.h>
  #include <unistd.h>
  
-@@ -6383,7 +6383,7 @@ bool v8::V8::Initialize(const int build_config) {
+@@ -6468,7 +6468,7 @@
    return true;
  }
  

@@ -1,6 +1,6 @@
---- cargo-crates/v8-152.2.0/build/rust/allocator/lib.rs.orig	2006-07-24 01:21:28 UTC
+--- cargo-crates/v8-152.2.0/build/rust/allocator/lib.rs.orig
 +++ cargo-crates/v8-152.2.0/build/rust/allocator/lib.rs
-@@ -108,6 +108,12 @@ mod both_allocators {
+@@ -111,6 +111,12 @@
          0
      }
  

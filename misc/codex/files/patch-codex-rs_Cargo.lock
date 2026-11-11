@@ -1,8 +1,8 @@
 --- codex-rs/Cargo.lock.orig
 +++ codex-rs/Cargo.lock
-@@ -7570,15 +7570,6 @@
+@@ -7601,15 +7601,6 @@
  checksum = "42703706b716c37f96a77aea830392ad231f44c9e9a67872fa5548707e11b11c"
-
+ 
  [[package]]
 -name = "fsevent-sys"
 -version = "4.1.0"
@@ -16,8 +16,8 @@
  name = "fslock"
  version = "0.2.1"
  source = "registry+https://github.com/rust-lang/crates.io-index"
-@@ -9565,9 +9556,9 @@
-
+@@ -9596,9 +9587,9 @@
+ 
  [[package]]
  name = "inotify"
 -version = "0.11.0"
@@ -29,8 +29,8 @@
  dependencies = [
   "bitflags 2.13.1",
   "inotify-sys",
-@@ -9576,9 +9567,9 @@
-
+@@ -9607,9 +9598,9 @@
+ 
  [[package]]
  name = "inotify-sys"
 -version = "0.1.5"
@@ -42,8 +42,8 @@
  dependencies = [
   "libc",
  ]
-@@ -9956,9 +9947,9 @@
-
+@@ -9987,9 +9978,9 @@
+ 
  [[package]]
  name = "kqueue"
 -version = "1.1.1"
@@ -55,8 +55,8 @@
  dependencies = [
   "kqueue-sys",
   "libc",
-@@ -9966,11 +9957,11 @@
-
+@@ -9997,11 +9988,11 @@
+ 
  [[package]]
  name = "kqueue-sys"
 -version = "1.0.4"
@@ -71,9 +71,9 @@
 + "bitflags 2.13.1",
   "libc",
  ]
-
-@@ -10649,27 +10640,27 @@
-
+ 
+@@ -10680,27 +10671,27 @@
+ 
  [[package]]
  name = "notify"
 -version = "8.2.0"
@@ -97,7 +97,7 @@
 + "windows-sys 0.61.2",
 + "xxhash-rust",
  ]
-
+ 
  [[package]]
  name = "notify-types"
  version = "2.1.0"
@@ -107,7 +107,7 @@
  dependencies = [
   "bitflags 2.13.1",
  ]
-@@ -10995,6 +10986,16 @@
+@@ -11026,6 +11017,16 @@
  dependencies = [
   "objc2",
   "objc2-foundation",
@@ -122,9 +122,9 @@
 + "libc",
 + "objc2-core-foundation",
  ]
-
+ 
  [[package]]
-@@ -16610,7 +16611,8 @@
+@@ -16641,7 +16642,8 @@
  [[package]]
  name = "v8"
  version = "152.2.0"
@@ -134,7 +134,7 @@
  dependencies = [
   "bindgen",
   "bitflags 2.13.1",
-@@ -17888,6 +17890,12 @@
+@@ -17919,6 +17921,12 @@
  version = "0.13.6"
  source = "registry+https://github.com/rust-lang/crates.io-index"
  checksum = "66fee0b777b0f5ac1c69bb06d361268faafa61cd4682ae064a171c16c433e9e4"
@@ -144,6 +144,6 @@
 +version = "0.8.18"
 +source = "registry+https://github.com/rust-lang/crates.io-index"
 +checksum = "aee1b19627c7c60102ab80d3a9cbe18de90bfe03bfa6c3715447681f0e8c8af6"
-
+ 
  [[package]]
  name = "yansi"

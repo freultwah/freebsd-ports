@@ -1,8 +1,6 @@
-Convert Tokio's u32 PID to the platform's waitid id_t (i64 on FreeBSD).
-
---- codex-rs/exec-server/src/shell_snapshot_process.rs.orig
+--- codex-rs/exec-server/src/shell_snapshot_process.rs.orig	2026-10-09 19:40:23 UTC
 +++ codex-rs/exec-server/src/shell_snapshot_process.rs
-@@ -51,7 +51,7 @@
+@@ -51,7 +51,7 @@ impl SnapshotCapture {
                  if unsafe {
                      libc::waitid(
                          libc::P_PID,

@@ -1,4 +1,4 @@
---- cargo-crates/v8-152.2.0/v8/src/base/platform/platform-posix.cc.orig	2006-07-24 01:21:28 UTC
+--- cargo-crates/v8-152.2.0/v8/src/base/platform/platform-posix.cc.orig
 +++ cargo-crates/v8-152.2.0/v8/src/base/platform/platform-posix.cc
 @@ -78,7 +78,7 @@
  #include <sys/syscall.h>
@@ -9,23 +9,21 @@
  #define MAP_ANONYMOUS MAP_ANON
  #endif
  
-@@ -359,8 +359,15 @@ void OS::SetRandomMmapSeed(int64_t seed) {
+@@ -359,6 +359,13 @@
    }
  }
  
 +#if V8_OS_OPENBSD
 +// Allow OpenBSD's mmap to select a random address on OpenBSD 
- // static
- void* OS::GetRandomMmapAddr() {
++// static
++void* OS::GetRandomMmapAddr() {
 +  return nullptr;
 +}
 +#else
-+// static
-+void* OS::GetRandomMmapAddr() {
+ // static
+ void* OS::GetRandomMmapAddr() {
    uintptr_t raw_addr;
-   {
-     MutexGuard guard(rng_mutex.Pointer());
-@@ -457,6 +464,7 @@ void* OS::GetRandomMmapAddr() {
+@@ -457,6 +464,7 @@
  #endif
    return reinterpret_cast<void*>(raw_addr);
  }
@@ -33,7 +31,7 @@
  
  // TODO(bbudge) Move Cygwin and Fuchsia stuff into platform-specific files.
  #if !V8_OS_CYGWIN && !V8_OS_FUCHSIA
-@@ -772,7 +780,7 @@ bool OS::HasLazyCommits() {
+@@ -772,7 +780,7 @@
  #if !V8_OS_ZOS
  // static
  bool OS::HasLazyCommits() {
@@ -42,7 +40,7 @@
    return true;
  #else
    // TODO(bbudge) Return true for all POSIX platforms.
-@@ -1423,7 +1431,7 @@ void Thread::SetThreadLocal(LocalStorageKey key, void*
+@@ -1423,7 +1431,7 @@
  // keep this version in POSIX as most Linux-compatible derivatives will
  // support it. MacOS and FreeBSD are different here.
  #if !defined(V8_OS_FREEBSD) && !defined(V8_OS_DARWIN) && !defined(_AIX) && \

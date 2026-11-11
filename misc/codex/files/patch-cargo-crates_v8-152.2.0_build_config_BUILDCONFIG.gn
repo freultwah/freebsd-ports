@@ -1,6 +1,6 @@
---- cargo-crates/v8-152.2.0/build/config/BUILDCONFIG.gn.orig	2006-07-24 01:21:28 UTC
+--- cargo-crates/v8-152.2.0/build/config/BUILDCONFIG.gn.orig
 +++ cargo-crates/v8-152.2.0/build/config/BUILDCONFIG.gn
-@@ -136,7 +136,8 @@ declare_args() {
+@@ -136,7 +136,8 @@
    is_official_build = false
  
    # Set to true when compiling with the Clang compiler.
@@ -10,7 +10,7 @@
               (current_cpu != "mips" && current_cpu != "mips64")
  
    # Allows the path to a custom target toolchain to be injected as a single
-@@ -241,6 +242,10 @@ if (host_toolchain == "") {
+@@ -250,6 +251,10 @@
      host_toolchain = "//build/toolchain/aix:$host_cpu"
    } else if (host_os == "zos") {
      host_toolchain = "//build/toolchain/zos:$host_cpu"
@@ -21,7 +21,7 @@
    } else {
      assert(false, "Unsupported host_os: $host_os")
    }
-@@ -291,6 +296,8 @@ if (target_os == "android") {
+@@ -300,6 +305,8 @@
    assert(
        false,
        "emscripten is not a supported target_os. It is available only as secondary toolchain.")
@@ -30,7 +30,7 @@
  } else {
    assert(false, "Unsupported target_os: $target_os")
  }
-@@ -325,7 +332,11 @@ is_ios = current_os == "ios"
+@@ -334,7 +341,11 @@
  is_chromeos = current_os == "chromeos"
  is_fuchsia = current_os == "fuchsia"
  is_ios = current_os == "ios"
@@ -43,15 +43,23 @@
  is_mac = current_os == "mac"
  is_wasm = current_os == "emscripten"
  is_watchos = current_os == "watchos"
-@@ -627,3 +638,4 @@
+@@ -624,7 +635,8 @@
+         not_needed([ "strict_deps" ])
+       }
+ 
 -      if (!defined(generate_modulemap)) {
 +      # The GN version in BSD ports does not support modulemap generation.
 +      if (!is_bsd && !defined(generate_modulemap)) {
          generate_modulemap = default_modulemap_mode
        }
-@@ -757,3 +769,4 @@
+ 
+@@ -754,7 +766,8 @@
+         not_needed([ "strict_deps" ])
+       }
+ 
 -      if (!defined(generate_modulemap)) {
 +      # The GN version in BSD ports does not support modulemap generation.
 +      if (!is_bsd && !defined(generate_modulemap)) {
          generate_modulemap = default_modulemap_mode
        }
+ 

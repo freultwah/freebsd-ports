@@ -121,12 +121,15 @@ post-patch:
 		${BUILD_WRKSRC}/core/src/tools/sandboxing_tests.rs \
 		${BUILD_WRKSRC}/core/src/unified_exec/process_manager_tests.rs \
 		${BUILD_WRKSRC}/core/tests/suite/exec.rs \
+		${BUILD_WRKSRC}/core/tests/suite/executor_discovery_v2.rs \
 		${BUILD_WRKSRC}/core/tests/suite/guardian_review.rs \
 		${BUILD_WRKSRC}/core/tests/suite/shell_snapshot.rs \
 		${BUILD_WRKSRC}/core/tests/suite/unified_exec.rs \
+		${BUILD_WRKSRC}/core/tests/suite/unified_exec_process_events.rs \
 		${BUILD_WRKSRC}/core/tests/suite/unified_exec_stdin_approval.rs \
 		${BUILD_WRKSRC}/core/tests/suite/unified_exec_stdin_review_size.rs \
 		${BUILD_WRKSRC}/core/tests/suite/user_notification.rs \
+		${BUILD_WRKSRC}/exec-server/src/environment/discovery_v2_tests.rs \
 		${BUILD_WRKSRC}/exec-server/src/process_sandbox_tests.rs \
 		${BUILD_WRKSRC}/exec-server/src/shell_snapshot_file_tests.rs \
 		${BUILD_WRKSRC}/exec-server/src/shell_snapshot_tests.rs \
@@ -164,15 +167,18 @@ post-patch:
 		${BUILD_WRKSRC}/core/tests/suite/approvals.rs \
 		${BUILD_WRKSRC}/core/tests/suite/code_mode.rs \
 		${BUILD_WRKSRC}/core/tests/suite/compact.rs \
+		${BUILD_WRKSRC}/core/tests/suite/dynamic_tool_cancellation.rs \
 		${BUILD_WRKSRC}/core/tests/suite/exec.rs \
 		${BUILD_WRKSRC}/core/tests/suite/guardian_mcp_elicitation.rs \
 		${BUILD_WRKSRC}/core/tests/suite/hooks.rs \
+		${BUILD_WRKSRC}/core/tests/suite/hooks_cwd_tests.rs \
 		${BUILD_WRKSRC}/core/tests/suite/hooks_mcp.rs \
 		${BUILD_WRKSRC}/core/tests/suite/interrupt_hooks.rs \
 		${BUILD_WRKSRC}/core/tests/suite/mcp_subagent_elicitation.rs \
 		${BUILD_WRKSRC}/core/tests/suite/mcp_user_verification.rs \
 		${BUILD_WRKSRC}/core/tests/suite/network_approval.rs \
 		${BUILD_WRKSRC}/core/tests/suite/openai_file_mcp.rs \
+		${BUILD_WRKSRC}/core/tests/suite/remote_env.rs \
 		${BUILD_WRKSRC}/core/tests/suite/subagent_notifications.rs \
 		${BUILD_WRKSRC}/core/tests/suite/token_budget.rs \
 		${BUILD_WRKSRC}/core/tests/suite/tool_lifecycle.rs \

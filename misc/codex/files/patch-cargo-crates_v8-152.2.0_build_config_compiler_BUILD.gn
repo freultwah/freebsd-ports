@@ -91,6 +91,15 @@
  }
  
  config("rustc_revision") {
+@@ -1943,7 +1950,7 @@
+       "-Wno-nontrivial-memcall",
+     ]
+ 
+-    if (!is_wasm) {
++    if (!is_wasm && !is_bsd) {
+       cflags += [
+         # TODO(crbug.com/432275627): Fix and re-enable.
+         "-Wno-uninitialized-const-pointer",
 @@ -2774,7 +2781,7 @@
  # There are some targeted places that AFDO regresses, so we provide a separate
  # config to allow AFDO to be disabled per-target.

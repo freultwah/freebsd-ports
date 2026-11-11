@@ -1,6 +1,6 @@
---- cargo-crates/v8-152.2.0/third_party/libunwind/src/src/DwarfInstructions.hpp.orig	2006-07-24 01:21:28 UTC
+--- cargo-crates/v8-152.2.0/third_party/libunwind/src/src/DwarfInstructions.hpp.orig
 +++ cargo-crates/v8-152.2.0/third_party/libunwind/src/src/DwarfInstructions.hpp
-@@ -396,6 +396,23 @@ int DwarfInstructions<A, R>::stepWithDwarf(
+@@ -408,6 +408,23 @@
        if (R::getArch() == REGISTERS_PPC64 && returnAddress != 0) {
          pint_t sp = newRegisters.getRegister(UNW_REG_SP);
          pint_t r2 = 0;
@@ -24,7 +24,7 @@
          switch (addressSpace.get32(returnAddress)) {
          case PPC64_ELFV1_R2_LOAD_INST_ENCODING:
            r2 = addressSpace.get64(sp + PPC64_ELFV1_R2_OFFSET);
-@@ -404,6 +421,7 @@ int DwarfInstructions<A, R>::stepWithDwarf(
+@@ -416,6 +433,7 @@
            r2 = addressSpace.get64(sp + PPC64_ELFV2_R2_OFFSET);
            break;
          }

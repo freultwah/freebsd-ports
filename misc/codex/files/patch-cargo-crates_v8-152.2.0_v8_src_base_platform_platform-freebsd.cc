@@ -1,6 +1,6 @@
---- cargo-crates/v8-152.2.0/v8/src/base/platform/platform-freebsd.cc.orig	2006-07-24 01:21:28 UTC
+--- cargo-crates/v8-152.2.0/v8/src/base/platform/platform-freebsd.cc.orig
 +++ cargo-crates/v8-152.2.0/v8/src/base/platform/platform-freebsd.cc
-@@ -43,14 +43,10 @@ TimezoneCache* OS::CreateTimezoneCache() {
+@@ -43,14 +43,10 @@
    return new PosixDefaultTimezoneCache();
  }
  
@@ -16,7 +16,7 @@
    size_t buffer_size;
    if (sysctl(mib, miblen, nullptr, &buffer_size, nullptr, 0) == 0) {
      // Overallocate the buffer by 1/3 to account for concurrent
-@@ -82,8 +78,13 @@ std::vector<OS::SharedLibraryAddress> OS::GetSharedLib
+@@ -82,8 +78,13 @@
              lib_name = std::string(path);
            }
            result.push_back(SharedLibraryAddress(
@@ -30,7 +30,10 @@
          }
  
          start += ssize;
-@@ -124,2 +125,20 @@
+@@ -121,5 +122,23 @@
+   return nullptr;
+ }
+ 
 +// static
 +Stack::StackSlot Stack::ObtainCurrentThreadStackReservedLimit() {
 +  pthread_attr_t attr;

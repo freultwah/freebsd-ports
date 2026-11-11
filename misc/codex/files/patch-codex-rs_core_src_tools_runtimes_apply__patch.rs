@@ -8,7 +8,7 @@
  use crate::tools::sandboxing::Approvable;
  use crate::tools::sandboxing::ApprovalAction;
  use crate::tools::sandboxing::ExecApprovalRequirement;
-@@ -174,6 +175,16 @@
+@@ -178,6 +179,16 @@
          let started_at = Instant::now();
          let fs = req.turn_environment.environment.get_filesystem();
          let sandbox = Self::file_system_sandbox_context_for_attempt(req, attempt);
@@ -25,8 +25,8 @@
          let mut stdout = Vec::new();
          let mut stderr = Vec::new();
          let result = codex_apply_patch::apply_patch_with_options(
-@@ -182,7 +193,8 @@
-                 update_file_mode: req.action.update_file_mode(),
+@@ -185,7 +196,8 @@
+             ApplyPatchOptions {
                  // Only reject links when an otherwise-required sandbox was bypassed.
                  // Executor-managed sandboxes can have SandboxType::None.
 -                follow_symlinks: attempt.sandbox_requested
@@ -35,7 +35,7 @@
                      || !attempt.manager.should_sandbox(
                          attempt.permissions,
                          self.sandbox_preference(),
-@@ -193,7 +205,7 @@
+@@ -196,7 +208,7 @@
              &mut stdout,
              &mut stderr,
              fs.as_ref(),

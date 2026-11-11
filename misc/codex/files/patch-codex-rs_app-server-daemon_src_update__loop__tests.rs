@@ -9,7 +9,7 @@
  #[tokio::test]
  async fn explicit_update_migrates_running_and_stopped_installations() {
      for (running, local) in [(false, false), (true, false), (false, true), (true, true)] {
-@@ -952,7 +952,7 @@
+@@ -996,7 +996,7 @@
      }
  }
  
@@ -18,7 +18,7 @@
  #[tokio::test]
  async fn manual_update_restarts_local_daemon_with_automatic_updates_disabled() {
      check_manual_update_restart("app-server-daemon").await;
-@@ -1239,7 +1239,7 @@
+@@ -1283,7 +1283,7 @@
      assert!(error.to_string().contains("package root changed"));
  }
  
@@ -27,7 +27,7 @@
  #[tokio::test]
  async fn daemon_owned_updates_require_and_request_an_isolated_installer() {
      let home = TempDir::new().unwrap();
-@@ -1338,3 +1338,11 @@
+@@ -1382,3 +1382,11 @@
          );
      }
  }

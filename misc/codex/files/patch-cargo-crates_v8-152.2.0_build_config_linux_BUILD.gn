@@ -1,6 +1,6 @@
---- cargo-crates/v8-152.2.0/build/config/linux/BUILD.gn.orig	2006-07-24 01:21:28 UTC
+--- cargo-crates/v8-152.2.0/build/config/linux/BUILD.gn.orig
 +++ cargo-crates/v8-152.2.0/build/config/linux/BUILD.gn
-@@ -41,7 +41,7 @@ config("runtime_library") {
+@@ -40,7 +40,7 @@
    }
  
    if ((!is_chromeos || default_toolchain != "//build/toolchain/cros:target") &&

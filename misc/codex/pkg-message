@@ -1,11 +1,12 @@
 [
 { type: install
   message: <<EOM
-Codex starts a per-user background server automatically. No rc service is needed.
-Use --no-daemon to run with an embedded server instead.
+Automatic background-server startup is disabled by default on FreeBSD.
+The optional per-user background server needs no rc service.
+Use --no-daemon to explicitly run with an embedded server.
 
-The background server keeps its own copy of the Codex package. After upgrading
-Codex with pkg, refresh that copy as your regular user:
+If you use the background server, it keeps its own copy of the Codex package.
+After upgrading Codex with pkg, refresh that copy as your regular user:
 
   codex app-server daemon update --from-cli
 

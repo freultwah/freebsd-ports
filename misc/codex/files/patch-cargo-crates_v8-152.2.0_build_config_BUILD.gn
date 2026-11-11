@@ -1,6 +1,6 @@
---- cargo-crates/v8-152.2.0/build/config/BUILD.gn.orig	2006-07-24 01:21:28 UTC
+--- cargo-crates/v8-152.2.0/build/config/BUILD.gn.orig
 +++ cargo-crates/v8-152.2.0/build/config/BUILD.gn
-@@ -209,6 +209,10 @@ config("default_libs") {
+@@ -207,6 +207,10 @@
      # Targets should choose to explicitly link frameworks they require. Since
      # linking can have run-time side effects, nothing should be listed here.
      libs = []

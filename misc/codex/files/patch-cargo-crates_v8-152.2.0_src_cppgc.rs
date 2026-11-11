@@ -7,7 +7,7 @@ Use the crates.io source distribution, which includes the required submodules.
 @@ -451,11 +451,26 @@
    }
  }
-
+ 
 +// C++ stores a compressed uint32_t or an uncompressed pointer. The binding
 +// size selects the alignment; MaybeUninit keeps the slot opaque to Rust.
 +trait MemberStorage {
@@ -29,13 +29,13 @@ Use the crates.io source distribution, which includes the required submodules.
 +      struct [< $name Inner >](
 +        <[u8; crate::binding:: [< cppgc__ $name _SIZE >]] as MemberStorage>::Aligned,
 +      );
-
+ 
        impl [< $name Inner >] {
          fn new(ptr: *mut RustObj) -> Self {
 @@ -584,6 +599,36 @@
    WeakMember
  }
-
+ 
 +#[cfg(test)]
 +mod member_layout_tests {
 +  use super::*;

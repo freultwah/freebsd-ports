@@ -1,6 +1,20 @@
 --- codex-rs/app-server-daemon/src/prepare_install.rs.orig
 +++ codex-rs/app-server-daemon/src/prepare_install.rs
-@@ -448,6 +448,10 @@
+@@ -74,7 +74,12 @@
+             .ok()
+             .map(|info| info.app_server_version),
+         managed_codex_path,
+-        message: "The CLI package is selected and pinned. Run `codex app-server daemon update` to return to production updates.".to_string(),
++        message: if cfg!(target_os = "freebsd") {
++            "The CLI package is selected and pinned. Use pkg for future updates, then run `codex app-server daemon update --from-cli` again."
++        } else {
++            "The CLI package is selected and pinned. Run `codex app-server daemon update` to return to production updates."
++        }
++        .to_string(),
+     }))
+ }
+ 
+@@ -521,6 +526,10 @@
              "codex-path/rg"
          },
      ];
@@ -11,7 +25,7 @@
      if cfg!(windows) {
          names.extend([
              "codex-resources/codex-command-runner.exe",
-@@ -477,6 +481,9 @@
+@@ -550,6 +559,9 @@
  
  fn platform_target() -> Result<&'static str> {
      match (std::env::consts::OS, std::env::consts::ARCH) {

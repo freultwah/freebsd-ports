@@ -1,6 +1,6 @@
---- cargo-crates/v8-152.2.0/v8/src/objects/simd.cc.orig	2006-07-24 01:21:28 UTC
+--- cargo-crates/v8-152.2.0/v8/src/objects/simd.cc.orig
 +++ cargo-crates/v8-152.2.0/v8/src/objects/simd.cc
-@@ -347,7 +347,7 @@ uintptr_t fast_search_avx(T* array, uintptr_t array_le
+@@ -348,7 +348,7 @@
  }
  #endif  // ifdef __SSE3__
  
@@ -9,7 +9,7 @@
  
  template <typename ScalarType>
  struct SVEOperations {
-@@ -637,9 +637,11 @@ inline uintptr_t search(T* array, uintptr_t array_len,
+@@ -638,9 +638,11 @@
  inline uintptr_t search(T* array, uintptr_t array_len, uintptr_t index,
                          T search_element) {
  #ifdef NEON64

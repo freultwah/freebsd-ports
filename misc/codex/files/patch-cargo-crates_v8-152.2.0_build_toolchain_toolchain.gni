@@ -1,6 +1,6 @@
---- cargo-crates/v8-152.2.0/build/toolchain/toolchain.gni.orig	2006-07-24 01:21:28 UTC
+--- cargo-crates/v8-152.2.0/build/toolchain/toolchain.gni.orig
 +++ cargo-crates/v8-152.2.0/build/toolchain/toolchain.gni
-@@ -69,7 +69,7 @@ if (host_os == "mac") {
+@@ -74,7 +74,7 @@
    host_shlib_extension = ".dylib"
  } else if (host_os == "win") {
    host_shlib_extension = ".dll"

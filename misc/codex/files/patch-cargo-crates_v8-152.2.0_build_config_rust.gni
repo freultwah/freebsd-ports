@@ -1,6 +1,6 @@
---- cargo-crates/v8-152.2.0/build/config/rust.gni.orig	2006-07-24 01:21:28 UTC
+--- cargo-crates/v8-152.2.0/build/config/rust.gni.orig
 +++ cargo-crates/v8-152.2.0/build/config/rust.gni
-@@ -67,7 +67,8 @@ declare_args() {
+@@ -67,7 +67,8 @@
    # set this to the output of `rustc -V`. Changing this string will cause all
    # Rust targets to be rebuilt, which allows you to update your toolchain and
    # not break incremental builds.
@@ -10,7 +10,7 @@
  
    # Whether artifacts produced by the Rust compiler can participate in ThinLTO.
    #
-@@ -180,6 +181,24 @@ if (enable_rust) {
+@@ -168,6 +169,24 @@
    } else {
      toolchain_has_rust = custom_toolchain_supports_platform
      rustc_revision = rustc_version
@@ -35,7 +35,7 @@
    }
  }
  
-@@ -365,7 +384,11 @@ if (use_musl && rust_abi_target != "" &&
+@@ -353,7 +372,11 @@
    rust_abi_target = string_replace(rust_abi_target, "-gnu", "-musl")
  }
  
