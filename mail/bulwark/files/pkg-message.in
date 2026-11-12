@@ -1,0 +1,28 @@
+[
+{ type: install
+  message: <<EOM
+Bulwark Lite is installed in %%WWWDIR%%.
+
+Serve this directory at the root of a dedicated HTTPS virtual host.
+The upstream release is built for /; hosting it under a subpath requires
+a separate upstream build.
+
+Set jmapServerUrl in %%WWWDIR%%/config.json and configure Stalwart
+to allow requests from your webmail origin (CORS). config.json and
+policy.json are preserved across package upgrades. They are public
+browser configuration; do not put passwords or other secrets in them.
+
+Web-server examples, including deep-link routing and security headers:
+  %%EXAMPLESDIR%%/nginx.conf
+  %%EXAMPLESDIR%%/Caddyfile
+Review and adapt an example to your HTTPS virtual host; neither is enabled
+automatically. Ensure .mjs files are served as JavaScript.
+
+Deployment details: %%DOCSDIR%%/LITE-README.md
+The matching upstream source archive is also installed in %%DOCSDIR%%.
+
+This is the static Lite edition. It has no Node.js service, admin console,
+plugins, cross-device settings sync, or web push notifications.
+EOM
+}
+]

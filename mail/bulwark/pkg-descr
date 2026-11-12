@@ -1,0 +1,11 @@
+Bulwark Lite is the static edition of Bulwark Webmail, a browser-based
+JMAP client designed for Stalwart Mail Server. It provides mail, calendar,
+contacts, files, multiple accounts, themes, and password/TOTP login.
+
+This port installs upstream's prebuilt static client for an existing web
+server. It does not require Node.js or a local mail server. The browser
+connects directly to a JMAP server, which must permit the webmail origin
+through CORS when hosted separately.
+
+Lite omits the full edition's admin console, plugins, settings sync,
+OAuth/OIDC configuration, office editing, and web push notifications.
