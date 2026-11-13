@@ -1,0 +1,167 @@
+{
+  "audio/owntone": {
+    "source": "github",
+    "project": "owntone/owntone-server",
+    "pattern": "v?(\\d+(?:\\.\\d+)+)"
+  },
+  "devel/php-libawl": {
+    "source": "git",
+    "url": "https://gitlab.com/davical-project/awl.git",
+    "pattern": "r?(\\d+(?:\\.\\d+)+)"
+  },
+  "devel/py-pyinotify": {
+    "source": "pypi",
+    "project": "pyinotify"
+  },
+  "devel/py-pyinstrument": {
+    "source": "pypi",
+    "project": "pyinstrument"
+  },
+  "devel/py-uvloop": {
+    "source": "pypi",
+    "project": "uvloop"
+  },
+  "dns/bind920": {
+    "source": "text",
+    "url": "https://downloads.isc.org/isc/bind9/",
+    "pattern": "href=\"(9\\.20\\.\\d+)/\""
+  },
+  "ftp/proftpd-current": {
+    "ignore": "Pinned Git snapshot; release versions do not describe the packaged commit."
+  },
+  "lang/python315": {
+    "source": "git",
+    "url": "https://github.com/python/cpython.git",
+    "pattern": "v(3\\.15\\.\\d+)"
+  },
+  "lang/rust": {
+    "source": "ports"
+  },
+  "mail/bulwark": {
+    "source": "github",
+    "project": "bulwarkmail/webmail",
+    "pattern": "v?(\\d+(?:\\.\\d+)+)"
+  },
+  "mail/dovecot": {
+    "source": "text",
+    "url": "https://dovecot.org/releases/2.3/",
+    "pattern": "href=\"dovecot-(2\\.3\\.\\d+(?:\\.\\d+)?)\\.tar\\."
+  },
+  "mail/dovecot-xaps-daemon": {
+    "ignore": "Pinned Git snapshot; release versions do not describe the packaged commit."
+  },
+  "mail/dovecot-xaps-plugin": {
+    "ignore": "Pinned Git snapshot; release versions do not describe the packaged commit."
+  },
+  "mail/postfixadmin-current": {
+    "ignore": "Pinned Git snapshot; release versions do not describe the packaged commit."
+  },
+  "mail/py-postfix-mta-sts-resolver": {
+    "ignore": "Pinned Git snapshot; release versions do not describe the packaged commit."
+  },
+  "mail/roundcube": {
+    "source": "github",
+    "project": "roundcube/roundcubemail",
+    "pattern": "v?(\\d+(?:\\.\\d+)+)"
+  },
+  "mail/roundcube-carddav": {
+    "source": "github",
+    "project": "mstilkerich/rcmcarddav",
+    "pattern": "v?(\\d+(?:\\.\\d+)+)"
+  },
+  "mail/roundcube-contextmenu": {
+    "source": "github",
+    "project": "JohnDoh/roundcube-contextmenu",
+    "pattern": "v?(\\d+(?:\\.\\d+)+)"
+  },
+  "mail/roundcube-html5_notifier": {
+    "source": "github",
+    "project": "stremlau/html5_notifier",
+    "pattern": "v?(\\d+(?:\\.\\d+)+)"
+  },
+  "mail/stalwart": {
+    "source": "github",
+    "project": "stalwartlabs/stalwart",
+    "pattern": "v?(\\d+(?:\\.\\d+)+)"
+  },
+  "misc/codex": {
+    "source": "github",
+    "project": "openai/codex",
+    "pattern": "rust-v(\\d+\\.\\d+\\.\\d+)"
+  },
+  "multimedia/plexmediaserver": {
+    "source": "plex"
+  },
+  "net-p2p/libtorrent": {
+    "source": "github",
+    "project": "rakshasa/rtorrent",
+    "pattern": "v?(\\d+(?:\\.\\d+)+)"
+  },
+  "net-p2p/rtorrent": {
+    "source": "github",
+    "project": "rakshasa/rtorrent",
+    "pattern": "v?(\\d+(?:\\.\\d+)+)"
+  },
+  "net/phpldapadmin": {
+    "source": "github",
+    "project": "leenooks/phpLDAPadmin",
+    "pattern": "v?(\\d+(?:\\.\\d+)+)"
+  },
+  "net/samba424": {
+    "source": "text",
+    "url": "https://download.samba.org/pub/samba/stable/",
+    "pattern": "href=\"samba-(4\\.24\\.\\d+)\\.tar\\."
+  },
+  "net/samba425": {
+    "source": "text",
+    "url": "https://download.samba.org/pub/samba/stable/",
+    "pattern": "href=\"samba-(4\\.25\\.\\d+)\\.tar\\."
+  },
+  "print/qpdf": {
+    "source": "github",
+    "project": "qpdf/qpdf",
+    "pattern": "v?(\\d+(?:\\.\\d+)+)"
+  },
+  "security/clamav-unofficial-sigs": {
+    "source": "github",
+    "project": "extremeshok/clamav-unofficial-sigs",
+    "pattern": "v?(\\d+(?:\\.\\d+)+)"
+  },
+  "security/softether5": {
+    "source": "github",
+    "project": "SoftEtherVPN/SoftEtherVPN",
+    "pattern": "v?(\\d+(?:\\.\\d+)+)"
+  },
+  "sysutils/py-glances": {
+    "source": "github",
+    "project": "nicolargo/glances",
+    "pattern": "v?(\\d+(?:\\.\\d+)+)"
+  },
+  "textproc/apache-solr": {
+    "source": "text",
+    "url": "https://archive.apache.org/dist/solr/solr/",
+    "pattern": "href=\"(\\d+\\.\\d+\\.\\d+)/\""
+  },
+  "textproc/apache-tika": {
+    "source": "text",
+    "url": "https://archive.apache.org/dist/tika/",
+    "pattern": "href=\"(\\d+\\.\\d+\\.\\d+)/\""
+  },
+  "www/davical": {
+    "source": "git",
+    "url": "https://gitlab.com/davical-project/davical.git",
+    "pattern": "r?(\\d+(?:\\.\\d+)+)"
+  },
+  "www/py-aiohttp": {
+    "source": "pypi",
+    "project": "aiohttp"
+  },
+  "www/rutorrent5": {
+    "source": "github",
+    "project": "Novik/ruTorrent",
+    "pattern": "v?(\\d+(?:\\.\\d+)+)"
+  },
+  "www/wordpress": {
+    "source": "wordpress"
+  }
+}
