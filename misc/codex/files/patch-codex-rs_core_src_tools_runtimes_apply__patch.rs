@@ -10,13 +10,13 @@
  use crate::tools::sandboxing::ExecApprovalRequirement;
 @@ -178,6 +179,16 @@
          let started_at = Instant::now();
-         let fs = req.turn_environment.environment.get_filesystem();
+         let fs = req.turn_environment.environment().get_filesystem();
          let sandbox = Self::file_system_sandbox_context_for_attempt(req, attempt);
 +        let sandbox = apply_patch_file_system_sandbox(&req.turn_environment, sandbox.as_ref());
 +        // Keep local BSD symlink handling without changing remote executors
 +        // or environments that restrict filesystem reads.
 +        let local_bsd_full_read = cfg!(any(target_os = "freebsd", target_os = "openbsd"))
-+            && !req.turn_environment.environment.is_remote()
++            && !req.turn_environment.environment().is_remote()
 +            && req
 +                .turn_environment
 +                .permission_profile_with_workspace_roots()

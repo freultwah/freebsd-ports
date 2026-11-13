@@ -20,7 +20,7 @@
 +    sandbox: Option<&'a FileSystemSandboxContext>,
 +) -> Option<&'a FileSystemSandboxContext> {
 +    if cfg!(any(target_os = "openbsd", target_os = "freebsd"))
-+        && !environment.environment.is_remote()
++        && !environment.environment().is_remote()
 +        && environment
 +            .permission_profile_with_workspace_roots()
 +            .file_system_sandbox_policy()
@@ -32,9 +32,9 @@
      }
  }
 
-@@ -433,8 +451,14 @@
-     tool_name: &str,
- ) -> Result<Option<FunctionToolOutput>, FunctionCallError> {
+@@ -456,8 +474,14 @@
+     step_context: &StepContext,
+ ) -> Result<Option<ApplyPatchRequest>, FunctionCallError> {
      let sandbox = turn_environment.sandbox_context(/*additional_permissions*/ None);
 -    match codex_apply_patch::maybe_parse_apply_patch_verified(command, cwd, fs, Some(&sandbox))
 -        .await
@@ -48,10 +48,10 @@
 +    .await
      {
          codex_apply_patch::MaybeApplyPatchVerified::Body(changes) => {
-             let request = prepare_verified_patch(changes, turn_environment, &step_context)?;
-@@ -476,11 +500,13 @@
+             prepare_verified_patch(changes, turn_environment.clone(), step_context).map(Some)
+@@ -490,11 +514,13 @@
      };
-     let fs = turn_environment.environment.get_filesystem();
+     let fs = turn_environment.environment().get_filesystem();
      let sandbox = turn_environment.sandbox_context(/*additional_permissions*/ None);
 +    let verification_sandbox =
 +        apply_patch_file_system_sandbox(turn_environment, Some(&sandbox));
