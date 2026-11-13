@@ -1,6 +1,5 @@
 PORTNAME=	clamav-unofficial-sigs
-PORTVERSION=	7.2.5
-PORTREVISION=	3
+PORTVERSION=	8.0.0
 CATEGORIES=	security
 
 MAINTAINER=	freebsd@mnd.sc
