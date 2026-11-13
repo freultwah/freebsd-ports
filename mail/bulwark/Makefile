@@ -36,6 +36,11 @@ do-install:
 		"! -name config.json ! -name policy.json \
 		! -name nginx.conf.example ! -name Caddyfile.example \
 		! -name LITE-README.md")
+	# Next.js asset names and build-ID directories change with each release.
+	@(cd ${STAGEDIR}${WWWDIR} && ${FIND} -s . -type f) | \
+		${SED} 's|^\./|${WWWDIR_REL}/|' >> ${TMPPLIST}
+	@(cd ${STAGEDIR}${WWWDIR} && ${FIND} -s . -type d -empty) | \
+		${SED} 's|^\./|@dir ${WWWDIR_REL}/|' >> ${TMPPLIST}
 	${INSTALL_DATA} ${WRKSRC}/config.json ${STAGEDIR}${WWWDIR}/config.json.sample
 	${INSTALL_DATA} ${WRKSRC}/policy.json ${STAGEDIR}${WWWDIR}/policy.json.sample
 	${SED} 's|/var/www/bulwark-lite|${WWWDIR}|g' \
