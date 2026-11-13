@@ -1,5 +1,5 @@
 PORTNAME=	rust
-PORTVERSION?=	1.99.0
+PORTVERSION?=	1.99.1
 PORTREVISION?=	0
 CATEGORIES=	lang
 MASTER_SITES=	https://static.rust-lang.org/dist/:src \
@@ -116,6 +116,18 @@ _COMPONENTS+=		cargo-${_PACKAGE_VERS}-${_RUST_TARGET} \
 
 .if ${OPSYS} != FreeBSD
 IGNORE=		is only for FreeBSD
+.endif
+
+# cc-rs appends the target specific CFLAGS_<target> to CFLAGS, it does not
+# replace them.  Pass the flags per target only, so that the -march/-mtune/
+# -mcpu that CPUTYPE adds for the host do not reach the C code built for
+# wasm32 (compiler-builtins), where clang rejects them.
+_RUST_CC_ENV=	CFLAGS= CXXFLAGS= \
+		CFLAGS_${_RUST_TARGET:S/-/_/g}="${CFLAGS}" \
+		CXXFLAGS_${_RUST_TARGET:S/-/_/g}="${CXXFLAGS}"
+.if ${PORT_OPTIONS:MWASM}
+_RUST_CC_ENV+=	CFLAGS_wasm32_unknown_unknown="${CFLAGS:N-march=*:N-mtune=*:N-mcpu=*}" \
+		CXXFLAGS_wasm32_unknown_unknown="${CXXFLAGS:N-march=*:N-mtune=*:N-mcpu=*}"
 .endif
 
 .if ${ARCH} == powerpc
@@ -243,9 +255,15 @@ do-configure:
 .else
 # use the builtin clang when not using PORT_LLVM
 .if ${_target} == "wasm32-unknown-unknown"
+.if ${PORT_OPTIONS:MPORT_LLVM}
+	@${ECHO_CMD} 'cc="${LOCALBASE}/bin/clang${LLVM_VERSION}"' >> ${WRKSRC}/config.toml
+	@${ECHO_CMD} 'cxx="${LOCALBASE}/bin/clang++${LLVM_VERSION}"' >> ${WRKSRC}/config.toml
+	@${ECHO_CMD} 'linker="${LOCALBASE}/bin/clang${LLVM_VERSION}"' >> ${WRKSRC}/config.toml
+.else
 	@${ECHO_CMD} 'cc="${WRKDIR}/_build/${_RUST_TARGET}/llvm/bin/clang"' >> ${WRKSRC}/config.toml
 	@${ECHO_CMD} 'cxx="${WRKDIR}/_build/${_RUST_TARGET}/llvm/bin/clang++"' >> ${WRKSRC}/config.toml
 	@${ECHO_CMD} 'linker="${WRKDIR}/_build/${_RUST_TARGET}/llvm/bin/clang"' >> ${WRKSRC}/config.toml
+.endif
 .else
 	@${ECHO_CMD} 'cc="${CC}"' >> ${WRKSRC}/config.toml
 	@${ECHO_CMD} 'cxx="${CXX}"' >> ${WRKSRC}/config.toml
@@ -254,6 +272,9 @@ do-configure:
 .endif # powerpc
 .if ${PORT_OPTIONS:MPORT_LLVM}
 	@${ECHO_CMD} 'llvm-config="${LOCALBASE}/bin/${LLVM_CONFIG}"' >> ${WRKSRC}/config.toml
+.endif
+.if ${_target} == "wasm32-unknown-unknown"
+	@${ECHO_CMD} 'profiler=false' >> ${WRKSRC}/config.toml
 .endif
 .endfor
 	@${ECHO_CMD} '[dist]' >> ${WRKSRC}/config.toml
@@ -265,7 +286,7 @@ do-configure:
 
 do-build:
 	@cd ${WRKSRC} && \
-		${SETENV} ${MAKE_ENV} ${PYTHON_CMD} x.py dist --jobs=${MAKE_JOBS_NUMBER}
+		${SETENV} ${MAKE_ENV} ${_RUST_CC_ENV} ${PYTHON_CMD} x.py dist --jobs=${MAKE_JOBS_NUMBER}
 
 do-install:
 	${RM} -r ${WRKDIR}/_extractdist
@@ -311,6 +332,6 @@ post-install-SOURCES-on:
 # Note that make test does not work when rust is already installed.
 do-test:
 	@cd ${WRKSRC} && \
-		${SETENV} ${TEST_ENV} ${PYTHON_CMD} x.py test --jobs=${MAKE_JOBS_NUMBER}
+		${SETENV} ${TEST_ENV} ${_RUST_CC_ENV} ${PYTHON_CMD} x.py test --jobs=${MAKE_JOBS_NUMBER}
 
 .include <bsd.port.post.mk>
