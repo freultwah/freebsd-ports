@@ -1,5 +1,5 @@
-TIMESTAMP = 1794475462
-SHA256 (bulwark-lite-1.21.1.zip) = 36e3f9d8a3c7b240b3821501df7447e5ba4b220e6d4eb377f8f3df7be6ea8060
-SIZE (bulwark-lite-1.21.1.zip) = 30904733
-SHA256 (bulwarkmail-webmail-1.21.1_GH0.tar.gz) = 3b58778afcc4289eef11154f1b513b2aaa2bc29e8684d9d678a182efa9b3ba76
-SIZE (bulwarkmail-webmail-1.21.1_GH0.tar.gz) = 17606246
+TIMESTAMP = 1794583843
+SHA256 (bulwark-lite-1.21.2.zip) = fc01f7b6420c6b61ccb9a894bfec16f6021b0750956132cc2b288ab60685fd86
+SIZE (bulwark-lite-1.21.2.zip) = 30937295
+SHA256 (bulwarkmail-webmail-1.21.2_GH0.tar.gz) = 13d020fe90a3651068e140936e3700a3b6a736303369b56092f2ee2548723cdb
+SIZE (bulwarkmail-webmail-1.21.2_GH0.tar.gz) = 18211701
