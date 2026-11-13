@@ -1,25 +1,49 @@
 [
-{ type: install
+{ type: [install, upgrade]
   message: <<EOM
 %%PKGNAME%% has been installed into:
 
     %%WWWDIR%%
 
-Please edit config.php to suit your needs.
+Configure %%WWWDIR%%/.env before serving the application. Set LDAP_HOST,
+LDAP_USERNAME and LDAP_PASSWORD for your LDAP server, and APP_URL to the
+external URL. PHP configuration files are in %%WWWDIR%%/config/.
+Local changes to .env and config/*.php are preserved on package upgrades;
+compare them with the supplied .example and .sample files after upgrading.
 
-To make phpLDAPadmin available through your web site, I suggest that
-you add something like the following to httpd.conf:
+For a NEW installation only, generate the application encryption key as root:
 
-    Alias /phpldapadmin/ "%%WWWDIR%%/htdocs/"
+    cd %%WWWDIR%%
+    %%LOCALBASE%%/bin/php artisan key:generate --force
 
-    <Directory "%%WWWDIR%%/htdocs">
-        Options none
-        AllowOverride none
+Keep the existing APP_KEY when upgrading. If LDAP_PASSWORD_ENC=true is used,
+the encrypted LDAP password also depends on that key.
 
-        Order Deny,Allow
-        Deny from all
-        Allow from 127.0.0.1 .example.com
+Point your web server at %%WWWDIR%%/public/ and route requests for nonexistent
+files to public/index.php. For Apache 2.4 with PHP configured and mod_rewrite
+enabled, an example restricted to local access is:
+
+    Alias /phpldapadmin "%%WWWDIR%%/public"
+    <Directory "%%WWWDIR%%/public">
+        DirectoryIndex index.php
+        Options FollowSymLinks
+        AllowOverride FileInfo Options
+        Require local
     </Directory>
+
+Adjust access restrictions for your site. The PHP worker must run as
+%%WWWOWN%%:%%WWWGRP%%, or have equivalent access to storage/ and bootstrap/cache/.
+Only these runtime directories need web-server write access.
+
+Put custom JSON templates in %%WWWDIR%%/templates/custom/.
+
+After an upgrade, clear cached configuration and views as the PHP worker:
+
+    cd %%WWWDIR%%
+    su -m %%WWWOWN%% -c '%%LOCALBASE%%/bin/php artisan optimize:clear'
+
+Upgrading from version 1 requires manual configuration and template migration:
+https://github.com/leenooks/phpLDAPadmin/wiki/Installation-Instructions
 EOM
 }
 ]

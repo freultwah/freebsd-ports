@@ -1,31 +1,27 @@
-diff --git a/app/Classes/Template.php b/app/Classes/Template.php
-index a2971e9..8049414 100644
---- app/Classes/Template.php
+--- app/Classes/Template.php.orig
 +++ app/Classes/Template.php
-@@ -123,6 +123,11 @@ class Template
+@@ -121,6 +121,11 @@
+ 	public function __isset(string $key): bool
+ 	{
  		return $this->template->has($key);
- 	}
- 
++	}
++
 +	public function get(string $key,mixed $default = NULL): mixed
 +	{
 +		return $this->template->get($key,$default);
-+	}
-+
+ 	}
+ 
  	/**
- 	 * Return the configuration for an attribute
- 	 *
-@@ -729,4 +734,4 @@ class Template
+@@ -729,4 +734,4 @@
  
  		return $result;
  	}
 -}
 \ No newline at end of file
 +}
-diff --git a/app/Http/Controllers/EntryController.php b/app/Http/Controllers/EntryController.php
-index 818a996..acb2064 100644
---- app/Http/Controllers/EntryController.php
+--- app/Http/Controllers/EntryController.php.orig
 +++ app/Http/Controllers/EntryController.php
-@@ -17,6 +17,7 @@ use LdapRecord\Query\ObjectNotFoundException;
+@@ -17,6 +17,7 @@
  use Nette\NotImplementedException;
  
  use App\Classes\LDAP\Attribute\Factory;
@@ -33,7 +29,7 @@ index 818a996..acb2064 100644
  use App\Classes\LDAP\Import\LDIF as LDIFImport;
  use App\Classes\LDAP\Export\LDIF as LDIFExport;
  use App\Exceptions\Import\{GeneralException,VersionException};
-@@ -28,7 +29,7 @@ class EntryController extends Controller
+@@ -28,7 +29,7 @@
  {
  	private const LOGKEY = 'CEc';
  
@@ -42,7 +38,7 @@ index 818a996..acb2064 100644
  
  	/**
  	 * Create a new object in the LDAP server
-@@ -45,6 +46,7 @@ class EntryController extends Controller
+@@ -45,6 +46,7 @@
  		$key = request_key($request->get('_key',old('_key')));
  
  		$template = NULL;
@@ -50,7 +46,7 @@ index 818a996..acb2064 100644
  		$o = new Entry;
  		$o->setRDNBase($key['dn']);
  
-@@ -80,6 +82,19 @@ class EntryController extends Controller
+@@ -80,6 +82,19 @@
  			}
  		}
  
@@ -68,9 +64,9 @@ index 818a996..acb2064 100644
 +		}
 +
  		// See if we need to add in force_managed attributes
- 		foreach (config('pla.force_managed') as $attr => $ocs) {
- 			if ($template->objectclasses->intersect($ocs)->count()) {
-@@ -96,6 +111,7 @@ class EntryController extends Controller
+ 		if ($template) {
+ 			foreach (config('pla.force_managed') as $attr => $ocs) {
+@@ -99,6 +114,7 @@
  			->with('o',$o)
  			->with('step',$step)
  			->with('template',$template)
@@ -78,7 +74,7 @@ index 818a996..acb2064 100644
  			->with('container',old('container',$key['dn']));
  	}
  
-@@ -215,12 +231,14 @@ class EntryController extends Controller
+@@ -218,12 +234,14 @@
  
  		$o = new Entry;
  		$o->setDn($dn);
@@ -93,7 +89,7 @@ index 818a996..acb2064 100644
  
  		} catch (InsufficientAccessException $e) {
  			$request->flash();
-@@ -253,8 +271,70 @@ class EntryController extends Controller
+@@ -256,8 +274,70 @@
  			Cache::delete($attr.':'.Session::id());
  		}
  
@@ -165,18 +161,16 @@ index 818a996..acb2064 100644
  	}
  
  	public function delete(Request $request): \Illuminate\Http\RedirectResponse
-@@ -538,4 +618,4 @@ class EntryController extends Controller
+@@ -541,4 +621,4 @@
  			abort(500,$e->getMessage());
  		}
  	}
 -}
 \ No newline at end of file
 +}
-diff --git a/app/Http/Requests/EntryAddRequest.php b/app/Http/Requests/EntryAddRequest.php
-index d5d13e5..7396aff 100644
---- app/Http/Requests/EntryAddRequest.php
+--- app/Http/Requests/EntryAddRequest.php.orig
 +++ app/Http/Requests/EntryAddRequest.php
-@@ -100,8 +100,8 @@ class EntryAddRequest extends FormRequest
+@@ -100,8 +100,8 @@
  					'min:1',
  					new HasStructuralObjectClass,
  				],
@@ -187,7 +181,7 @@ index d5d13e5..7396aff 100644
  						$oc = collect(request()->post('objectclass'))->dot()->filter();
  
  						// If this is step 1 and there is no objectclass, and no template, then fail
-@@ -115,10 +115,12 @@ class EntryAddRequest extends FormRequest
+@@ -115,10 +115,12 @@
  						// Cant have both an objectclass and a template
  						if ($oc->count() && strlen($value))
  							$fail(__('You cannot select a template and an objectclass'));
@@ -204,16 +198,14 @@ index d5d13e5..7396aff 100644
  					'nullable',
  					function (string $attribute,mixed $value,\Closure $fail) {
  						$attr = preg_replace('/^_auto_value\./','',$attribute);
-@@ -137,4 +139,4 @@ class EntryAddRequest extends FormRequest
+@@ -137,4 +139,4 @@
  			])
  			->toArray();
  	}
 -}
 \ No newline at end of file
 +}
-diff --git a/resources/views/frames/create.blade.php b/resources/views/frames/create.blade.php
-index 5de7a77..5008ed4 100644
---- resources/views/frames/create.blade.php
+--- resources/views/frames/create.blade.php.orig
 +++ resources/views/frames/create.blade.php
 @@ -64,16 +64,32 @@
  								</div>
@@ -222,18 +214,19 @@ index 5de7a77..5008ed4 100644
 -							@case(2)
 -								<input type="hidden" name="_template" value="{{ $template?->file }}">
 -								<x-attribute :o="$o->rdn" :edit="true" :template="$template"/>
--
--								@foreach($o->getVisibleAttributes() as $ao)
--									<x-attribute :o="$ao" :edit="true" :template="$template"/>
--								@endforeach
 +								@case(2)
 +									<input type="hidden" name="_template" value="{{ $template?->file }}">
 +									<x-attribute :o="$o->rdn" :edit="true" :template="$template"/>
-+
+ 
+-								@foreach($o->getVisibleAttributes() as $ao)
+-									<x-attribute :o="$ao" :edit="true" :template="$template"/>
+-								@endforeach
 +									@foreach($o->getVisibleAttributes() as $ao)
 +										<x-attribute :o="$ao" :edit="true" :template="$template"/>
 +									@endforeach
-+
+ 
+-								@if(! $template)
+-									<!-- @todo When we come back from validation the javascript to append a new attribute is not loaded -->
 +									@if($template && $template_groups->count())
 +										<div class="row mb-2">
 +											<div class="col-12">
@@ -249,9 +242,7 @@ index 5de7a77..5008ed4 100644
 +											</div>
 +										</div>
 +									@endif
- 
--								@if(! $template)
--									<!-- @todo When we come back from validation the javascript to append a new attribute is not loaded -->
++
 +									@if(! $template)
 +										<!-- @todo When we come back from validation the javascript to append a new attribute is not loaded -->
  									@include('fragment.dn.add_attr',['edit'=>TRUE])
@@ -276,7 +267,9 @@ index 5de7a77..5008ed4 100644
 -		@endif
 +				});
 +			@endif
-+
+ 
+-		// Render the options list, if there are options
+-		@if((! $template) && $o->getMissingAttributes()->count())
 +			@if(($step === 2) && ($template ?? NULL) && ($template_groups ?? collect())->count())
 +				$(document).ready(function() {
 +					$('#_template_groups').select2({
@@ -289,9 +282,7 @@ index 5de7a77..5008ed4 100644
 +					});
 +				});
 +			@endif
- 
--		// Render the options list, if there are options
--		@if((! $template) && $o->getMissingAttributes()->count())
++
 +			// Render the options list, if there are options
 +			@if((! $template) && $o->getMissingAttributes()->count())
  			$('#newattr-select.d-none')

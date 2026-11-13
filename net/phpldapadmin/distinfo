@@ -1,3 +1,5 @@
-TIMESTAMP = 1779784445
-SHA256 (leenooks-phpLDAPadmin-2.3.11_GH0.tar.gz) = b44541c2349d3518be4cfdd644bf4f81ccce86f40d9665fc438597c92596e4ce
-SIZE (leenooks-phpLDAPadmin-2.3.11_GH0.tar.gz) = 627782
+TIMESTAMP = 1794597861
+SHA256 (phpldapadmin-2.3.12-deps.tgz) = dbe9f63439e3845fe283eb43fde2d81ddf63ee693fe2398c59c802b2852c29de
+SIZE (phpldapadmin-2.3.12-deps.tgz) = 5839738
+SHA256 (leenooks-phpLDAPadmin-2.3.12_GH0.tar.gz) = 760dbb01c812d4d18186ebc4367af77f25ee351d54431765b5444ce270a0d697
+SIZE (leenooks-phpLDAPadmin-2.3.12_GH0.tar.gz) = 626679
