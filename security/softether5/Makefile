@@ -1,5 +1,5 @@
 PORTNAME=	softether
-DISTVERSION=	5.2.5188
+DISTVERSION=	5.2.5189
 PORTEPOCH=	2
 CATEGORIES=	security net-vpn
 PKGNAMESUFFIX=	5
@@ -7,8 +7,7 @@ DIST_SUBDIR=	${PORTNAME}
 
 # Some patches are managed in my GitHub fork
 PATCH_SITES=	https://github.com/metalefty/${GH_PROJECT}/commit/
-PATCHFILES=	0cc81bd8.patch:-p1 \
-		a461121b.patch:-p1 \
+PATCHFILES=	a461121b.patch:-p1 \
 		0d974cb2.patch:-p1 \
 		7ae4b614.patch:-p1 \
 		effb160a.patch:-p1
@@ -39,6 +38,7 @@ GH_TUPLE=	BLAKE2:BLAKE2:ed1974e:blake2/3rdparty/BLAKE2 \
 		open-quantum-safe:oqs-provider:0.10.0:oqs_provider/src/Mayaqua/3rdparty/oqs-provider
 
 CMAKE_ARGS+=	-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DUSE_SYSTEM_CPU_FEATURES=ON \
 		-DSE_DBDIR="${SE_DBDIR}" \
 		-DSE_LOGDIR="${SE_LOGDIR}" \
 		-DSE_PIDDIR="${SE_PIDDIR}" \
