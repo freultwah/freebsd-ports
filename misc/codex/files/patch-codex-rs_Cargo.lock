@@ -128,7 +128,7 @@
  [[package]]
  name = "v8"
  version = "152.2.0"
--source = "git+https://github.com/seanh-oai/rusty_v8.git?rev=350c5a859a9b3c84ab8701b3ad51e3b7699b30c0#350c5a859a9b3c84ab8701b3ad51e3b7699b30c0"
+-source = "git+https://github.com/openai-oss-forks/rusty_v8.git?rev=90a65f887a0c0f048f3784afbcb320b373c8a2e0#90a65f887a0c0f048f3784afbcb320b373c8a2e0"
 +source = "registry+https://github.com/rust-lang/crates.io-index"
 +checksum = "a10fe1a92da5c32c7c7f838ce36c0ccfcfd5edf0865b58bdde820aa64cea9888"
  dependencies = [
