@@ -1,4 +1,4 @@
-TIMESTAMP = 1794823730
+TIMESTAMP = 1794865522
 SHA256 (rust/crates/adler2-2.0.1.crate) = 320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa
 SIZE (rust/crates/adler2-2.0.1.crate) = 13366
 SHA256 (rust/crates/adler32-1.2.0.crate) = aae1277d39aeec15cb388266ecc24b11c80469deae6067e17a1a7aa9e5c1f234
@@ -1521,5 +1521,5 @@ SHA256 (stalwartlabs-rust-rocksdb-f6169ca36d74c15637f8c6396c34e82aa73d0d47_GH0.t
 SIZE (stalwartlabs-rust-rocksdb-f6169ca36d74c15637f8c6396c34e82aa73d0d47_GH0.tar.gz) = 198030
 SHA256 (stalwartlabs-hickory-dns-f8b92b17fa6c7d09a6959672592106ca1410937b_GH0.tar.gz) = 8547de14919de6ef6c8221f19affc6f216fa1a80ad1bcf2144830a3acbd9df96
 SIZE (stalwartlabs-hickory-dns-f8b92b17fa6c7d09a6959672592106ca1410937b_GH0.tar.gz) = 1684811
-SHA256 (stalwartlabs-stalwart-v1.1.0_GH0.tar.gz) = d3d8e0f92b25fbf9bf91a255cdbaf0e515c438f809c431ad8e61e0b65d17b700
-SIZE (stalwartlabs-stalwart-v1.1.0_GH0.tar.gz) = 5326639
+SHA256 (stalwartlabs-stalwart-v1.1.1_GH0.tar.gz) = 71e2968da8f49cd82750ddcf5d641581eae39c8a5fc2f2d66b331cabea628cfc
+SIZE (stalwartlabs-stalwart-v1.1.1_GH0.tar.gz) = 5331879
