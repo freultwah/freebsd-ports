@@ -1,8 +1,8 @@
 # Created by: Elvis Chiang <elvis@sslab.cs.ccu.edu.tw>
 
 PORTNAME=	wordpress
-DISTVERSION=	7.1.4
-PORTREVISION=	1
+DISTVERSION=	7.1.5
+PORTREVISION=	0
 PORTEPOCH=	1
 CATEGORIES=	www
 MASTER_SITES=	http://wordpress.org/
