@@ -1,5 +1,5 @@
 PORTNAME=	phpldapadmin
-DISTVERSION=	2.3.12
+DISTVERSION=	2.3.13
 CATEGORIES=	net www
 PKGNAMESUFFIX=	${PHP_PKGNAMESUFFIX}
 
@@ -42,6 +42,16 @@ BUILD_DEPENDS+=	npm${NODEJS_SUFFIX}>0:www/npm${NODEJS_SUFFIX} \
 		${LOCALBASE}/bin/composer:devel/php-composer@${PHP_FLAVOR}
 .endif
 
+.include <bsd.port.pre.mk>
+
+# Bootstrap a version update before the generated archive exists. Export the
+# flag because the framework's makesum target invokes fetch in a sub-make.
+.if make(makesum) && empty(DEPS_MASTER_SITES) && \
+    !exists(${DISTDIR}/${DIST_SUBDIR}/${DEPS_DISTFILE})
+SKIP_DEPS_DISTFILE=	yes
+.export SKIP_DEPS_DISTFILE
+.endif
+
 .if !make(make-deps-distfile) && !defined(SKIP_DEPS_DISTFILE)
 MASTER_SITES+=	${DEPS_MASTER_SITES:S/$/:deps/}
 DISTFILES+=	${DEPS_DISTFILE}:deps
@@ -57,6 +67,9 @@ pre-fetch:
 
 post-extract:
 	@${TAR} -xf ${DISTDIR}/${DIST_SUBDIR}/${DEPS_DISTFILE} -C ${WRKSRC}
+.elif defined(SKIP_DEPS_DISTFILE)
+pre-fetch:
+	@${ECHO_MSG} "Maintainer mode: fetching source only; the generated dependency archive is excluded."
 .endif
 
 # Keep application code root-owned. Only storage and bootstrap/cache need to
@@ -103,9 +116,10 @@ post-install:
 		done >> ${TMPPLIST}
 
 # Maintainer-only preparation: downloads dependencies and compiles web assets.
-# After refreshing the archive, run make makesum and preserve the archive in
-# DISTDIR. It is deliberately not rebuilt during ordinary package builds.
+# Bootstrap the source checksums before patching, then record both archives
+# after preparation. Preserve the result in DISTDIR for ordinary builds.
 make-deps-distfile: build-depends
+	@cd ${.CURDIR} && ${MAKE} SKIP_DEPS_DISTFILE=yes makesum
 	@cd ${.CURDIR} && ${MAKE} SKIP_DEPS_DISTFILE=yes patch
 	@cd ${WRKSRC} && ${RM} -r node_modules vendor public/css/app.css public/fonts public/js/app.js public/js/manifest.js public/js/vendor.js public/mix-manifest.json public/webfonts
 	@cd ${WRKSRC} && ${SETENV} ${MAKE_ENV} composer install --no-dev --no-interaction --no-progress --prefer-dist
@@ -114,6 +128,7 @@ make-deps-distfile: build-depends
 	@cd ${WRKSRC} && ${RM} -r node_modules
 	@${MKDIR} ${DISTDIR}/${DIST_SUBDIR}
 	@cd ${WRKSRC} && ${TAR} -czf ${DISTDIR}/${DIST_SUBDIR}/${DEPS_DISTFILE} vendor public
-	@${ECHO_MSG} "Created ${DISTDIR}/${DIST_SUBDIR}/${DEPS_DISTFILE}; run make makesum."
+	@cd ${.CURDIR} && ${MAKE} makesum
+	@${ECHO_MSG} "Created ${DISTDIR}/${DIST_SUBDIR}/${DEPS_DISTFILE} and refreshed distinfo."
 
-.include <bsd.port.mk>
+.include <bsd.port.post.mk>
