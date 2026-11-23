@@ -1,7 +1,7 @@
 PORTNAME=	codex
 DISTVERSIONPREFIX=	rust-v
 DISTVERSION=	0.171.0
-PORTREVISION=	0
+PORTREVISION=	1
 CATEGORIES=	misc devel
 
 MAINTAINER=	tagattie@FreeBSD.org
@@ -46,7 +46,9 @@ SHEBANG_FILES=	codex-rs/app-server-protocol/scripts/write_schema_fixtures.py \
 		codex-rs/skills/src/assets/samples/skill-installer/scripts/github_utils.py \
 		codex-rs/skills/src/assets/samples/skill-installer/scripts/install-skill-from-github.py \
 		codex-rs/skills/src/assets/samples/skill-installer/scripts/list-skills.py \
+		codex-rs/skills/src/assets/samples/create-statusline/assets/statusline.py \
 		codex-rs/skills/tests/test_skill_installer.py \
+		codex-rs/skills/tests/test_statusline_starter.py \
 		codex-rs/vendor/bubblewrap/demos/userns-block-fd.py \
 		codex-rs/vendor/bubblewrap/tests/test-seccomp.py \
 		codex-rs/vendor/bubblewrap/tests/use-as-subproject/assert-correct-rpath.py \
@@ -130,6 +132,7 @@ post-patch:
 		${BUILD_WRKSRC}/core/tests/suite/unified_exec_stdin_review_size.rs \
 		${BUILD_WRKSRC}/core/tests/suite/user_notification.rs \
 		${BUILD_WRKSRC}/exec-server/src/environment/discovery_v2_tests.rs \
+		${BUILD_WRKSRC}/exec-server/src/local_process.rs \
 		${BUILD_WRKSRC}/exec-server/src/process_sandbox_tests.rs \
 		${BUILD_WRKSRC}/exec-server/src/shell_snapshot_file_tests.rs \
 		${BUILD_WRKSRC}/exec-server/src/shell_snapshot_tests.rs \
@@ -140,6 +143,7 @@ post-patch:
 		${BUILD_WRKSRC}/shell-command/src/shell_detect.rs \
 		${BUILD_WRKSRC}/shell-command/src/shell_snapshot_tests.rs \
 		${BUILD_WRKSRC}/tui/src/exec_command.rs \
+		${BUILD_WRKSRC}/tcp-tunnel/src/transport_tests.rs \
 		${BUILD_WRKSRC}/utils/path-uri/src/tests.rs
 	@${REINPLACE_CMD} -e 's|python3|${PYTHON_VERSION}|' \
 		${BUILD_WRKSRC}/app-server/tests/suite/v2/command_exec.rs \
@@ -196,6 +200,7 @@ post-patch:
 		${BUILD_WRKSRC}/linux-sandbox/tests/suite/daemon_sockets_tests.rs \
 		${BUILD_WRKSRC}/linux-sandbox/tests/suite/managed_proxy.rs \
 		${BUILD_WRKSRC}/linux-sandbox/tests/suite/managed_proxy_unix_sockets_tests.rs \
+		${BUILD_WRKSRC}/linux-sandbox/tests/suite/managed_tcp.rs \
 		${BUILD_WRKSRC}/linux-sandbox/tests/suite/sandbox.rs \
 		${BUILD_WRKSRC}/memories/write/src/startup_tests.rs \
 		${BUILD_WRKSRC}/rmcp-client/tests/stdio_descriptor_boundary.rs \
