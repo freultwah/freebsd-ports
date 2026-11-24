@@ -1,6 +1,6 @@
-TIMESTAMP = 1795420190
-SHA256 (softether/SoftEtherVPN-SoftEtherVPN-5.2.5191_GH0.tar.gz) = d24f89458b4f5fa73b274356bbd6d14399088a7f4acb1b9e37310267d41044e6
-SIZE (softether/SoftEtherVPN-SoftEtherVPN-5.2.5191_GH0.tar.gz) = 17014763
+TIMESTAMP = 1795500571
+SHA256 (softether/SoftEtherVPN-SoftEtherVPN-5.2.5192_GH0.tar.gz) = d00d8cae1961fef3b264498dbdcf9d1cccd1e689e4a3d40e27c36df4348f5e12
+SIZE (softether/SoftEtherVPN-SoftEtherVPN-5.2.5192_GH0.tar.gz) = 17015693
 SHA256 (softether/BLAKE2-BLAKE2-ed1974e_GH0.tar.gz) = d0e4f55377937a590401e4d65bc934608e52af313f17bb0ad6d5dd72c49864b5
 SIZE (softether/BLAKE2-BLAKE2-ed1974e_GH0.tar.gz) = 908833
 SHA256 (softether/cxong-tinydir-a4a2db5_GH0.tar.gz) = 4a513e16202e501facdc201b3bbeb00e5c5c6a14da53a7b7831fa17d4ef8ec88
