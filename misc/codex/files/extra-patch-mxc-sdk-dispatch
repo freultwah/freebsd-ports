@@ -2,7 +2,7 @@ Guard calls to the platform-specific run module on unsupported hosts.
 
 --- src/mxc-sdk/src/core/mxc_engine/dispatch.rs.orig
 +++ src/mxc-sdk/src/core/mxc_engine/dispatch.rs
-@@ -69,6 +69,7 @@
+@@ -76,6 +76,7 @@
      // Anchor the run to its policy identity before any backend is engaged, so
      // the streaming surface produces the same `mxc.PolicyHash` record as the
      // run-to-completion one.
@@ -10,7 +10,7 @@ Guard calls to the platform-specific run module on unsupported hosts.
      crate::mxc_engine::run::log_policy_hash(request, logger);
      match &request.containment {
          ContainmentBackend::Seatbelt => spawn_seatbelt(request, logger),
-@@ -97,6 +98,7 @@
+@@ -129,6 +130,7 @@
              "dry_run is not supported for PTY spawns",
          ));
      }
@@ -18,3 +18,11 @@ Guard calls to the platform-specific run module on unsupported hosts.
      crate::mxc_engine::run::log_policy_hash(request, logger);
      match &request.containment {
          ContainmentBackend::IsolationSession => spawn_isolation_session_pty(request, logger, size),
+@@ -156,6 +158,7 @@
+             "dry_run is not supported for inherited-stdio spawns",
+         ));
+     }
++    #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
+     crate::mxc_engine::run::log_policy_hash(request, logger);
+     match &request.containment {
+         ContainmentBackend::ProcessContainer => {
