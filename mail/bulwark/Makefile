@@ -1,5 +1,5 @@
 PORTNAME=	bulwark
-DISTVERSION=	1.21.3
+DISTVERSION=	1.22.0
 CATEGORIES=	mail www
 MASTER_SITES=	https://github.com/bulwarkmail/webmail/releases/download/${DISTVERSION}/:lite
 PKGNAMESUFFIX=	-lite
