@@ -84,5 +84,5 @@ include/torrent/utils/unordered_vector.h
 include/torrent/utils/uri_parser.h
 lib/libtorrent.so
 lib/libtorrent.so.58
-lib/libtorrent.so.58.0.0
+lib/libtorrent.so.58.0.1
 libdata/pkgconfig/libtorrent.pc
